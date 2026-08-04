@@ -22,7 +22,7 @@ export const mm: Dictionary = {
     reports: "အစီရင်ခံစာ",
   },
   login: {
-    subtitle: "မိသားစု စကားဝှက် ထည့်ပါ",
+    subtitle: "စကားဝှက် ထည့်ပါ",
     passwordPlaceholder: "စကားဝှက်",
     submit: "ဝင်ရောက်မည်",
     submitting: "စစ်ဆေးနေသည်...",
