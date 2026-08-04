@@ -134,7 +134,7 @@ export default async function ProductDetailPage({
             {history.map((entry) => (
               <div
                 key={entry.id}
-                className="flex justify-between border-t border-dashed border-border pt-1 text-muted first:border-0 first:pt-0"
+                className="flex justify-between border-t border-border pt-1 text-muted first:border-0 first:pt-0"
               >
                 <span>{entry.reason}</span>
                 <span

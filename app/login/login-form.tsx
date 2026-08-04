@@ -20,7 +20,7 @@ export function LoginForm({ dict, locale }: { dict: Dictionary; locale: Locale }
         </div>
         <form
           action={formAction}
-          className="space-y-4 rounded-lg border border-dashed border-border bg-surface p-6 shadow-[3px_3px_0_0_var(--color-border)]"
+          className="space-y-4 rounded-xl border border-border bg-surface p-6 shadow-md"
         >
           <div className="space-y-1 text-center">
             <h1 className="font-display text-2xl text-accent">{dict.common.appName}</h1>

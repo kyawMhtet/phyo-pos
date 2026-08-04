@@ -13,9 +13,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <header className="sticky top-0 z-10 border-b border-dashed border-border bg-background/95 backdrop-blur">
+      <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-4 py-3">
-          <span className="font-display text-lg tracking-wide text-accent">
+          <span className="font-display text-lg font-bold text-foreground">
             {dict.common.appName}
           </span>
           <div className="flex items-center gap-3">
@@ -23,7 +23,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <form action={logout}>
               <button
                 type="submit"
-                className="text-xs text-muted hover:text-foreground"
+                className="cursor-pointer text-xs text-muted hover:text-foreground"
               >
                 {dict.common.logout}
               </button>

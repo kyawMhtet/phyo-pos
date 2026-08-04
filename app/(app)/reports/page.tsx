@@ -97,7 +97,7 @@ export default async function ReportsPage({
           <Link
             key={r.value}
             href={`/reports?range=${r.value}`}
-            className={`whitespace-nowrap rounded-full border border-dashed px-3 py-1 text-sm transition-colors ${
+            className={`whitespace-nowrap rounded-full border px-3 py-1 text-sm transition-colors ${
               range === r.value
                 ? "border-accent bg-accent text-accent-foreground"
                 : "border-border text-muted hover:text-foreground"

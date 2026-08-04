@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import { Special_Elite, IBM_Plex_Sans, Noto_Sans_Myanmar } from "next/font/google";
+import { Sora, Manrope, Noto_Sans_Myanmar } from "next/font/google";
 import "./globals.css";
 
-const displayFont = Special_Elite({
+const displayFont = Sora({
   variable: "--font-display-raw",
-  weight: "400",
+  weight: ["600", "700"],
   subsets: ["latin"],
 });
 
-const bodyFont = IBM_Plex_Sans({
+const bodyFont = Manrope({
   variable: "--font-body-raw",
   weight: ["400", "500", "600"],
   subsets: ["latin"],

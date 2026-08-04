@@ -77,7 +77,7 @@ export default async function OrderDetailPage({
             <span>{formatMoney(item.subtotal)}</span>
           </div>
         ))}
-        <div className="space-y-1 border-t border-dashed border-border pt-2 text-sm">
+        <div className="space-y-1 border-t border-border pt-2 text-sm">
           <div className="flex justify-between text-muted">
             <span>{dict.orders.subtotal}</span>
             <span>{formatMoney(order.itemsSubtotal)}</span>

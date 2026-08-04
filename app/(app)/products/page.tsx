@@ -101,7 +101,7 @@ export default async function ProductsPage({
         query={query}
       />
 
-      <details className="rounded-lg border border-dashed border-border bg-surface">
+      <details className="rounded-lg border border-border bg-surface">
         <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
           {dict.products.addProduct}
         </summary>
@@ -147,7 +147,7 @@ export default async function ProductsPage({
         </form>
       </details>
 
-      <details className="rounded-lg border border-dashed border-border bg-surface">
+      <details className="rounded-lg border border-border bg-surface">
         <summary className="cursor-pointer px-4 py-3 text-sm font-medium">
           {dict.products.addCategory}
         </summary>
