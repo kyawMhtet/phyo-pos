@@ -27,6 +27,8 @@ export const mm: Dictionary = {
     submit: "ဝင်ရောက်မည်",
     submitting: "စစ်ဆေးနေသည်...",
     wrongPassword: "စကားဝှက် မှားနေသည်",
+    showPassword: "စကားဝှက် ပြရန်",
+    hidePassword: "စကားဝှက် ဖျောက်ရန်",
   },
   dashboard: {
     title: "ပင်မစာမျက်နှာ",

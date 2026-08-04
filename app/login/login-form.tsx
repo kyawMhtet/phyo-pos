@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { login, type LoginState } from "./actions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { LocaleToggle } from "@/components/locale-toggle";
 import type { Dictionary, Locale } from "@/lib/i18n";
 
@@ -26,12 +26,13 @@ export function LoginForm({ dict, locale }: { dict: Dictionary; locale: Locale }
             <h1 className="font-display text-2xl text-accent">{dict.common.appName}</h1>
             <p className="text-sm text-muted">{dict.login.subtitle}</p>
           </div>
-          <Input
-            type="password"
+          <PasswordInput
             name="password"
             autoFocus
             required
             placeholder={dict.login.passwordPlaceholder}
+            showLabel={dict.login.showPassword}
+            hideLabel={dict.login.hidePassword}
           />
           {state?.error && (
             <p className="text-sm text-red-600">{dict.login.wrongPassword}</p>

@@ -20,11 +20,13 @@ export const en = {
     reports: "Reports",
   },
   login: {
-    subtitle: "Enter the family password",
+    subtitle: "Enter password",
     passwordPlaceholder: "Password",
     submit: "Log in",
     submitting: "Checking...",
     wrongPassword: "Wrong password",
+    showPassword: "Show password",
+    hidePassword: "Hide password",
   },
   dashboard: {
     title: "Dashboard",
