@@ -13,11 +13,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-4 py-3">
-          <span className="font-display text-lg font-bold text-foreground">
-            {dict.common.appName}
-          </span>
+      <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur print:hidden">
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-4 py-1.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt={dict.common.appName} className="h-25 w-auto" />
           <div className="flex items-center gap-3">
             <LocaleToggle locale={locale} />
             <form action={logout}>
@@ -31,7 +30,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 pb-24">{children}</main>
+      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 pb-24 print:p-0">
+        {children}
+      </main>
       <BottomNav labels={dict.nav} />
     </>
   );

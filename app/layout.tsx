@@ -21,8 +21,13 @@ const myanmarFont = Noto_Sans_Myanmar({
 });
 
 export const metadata: Metadata = {
-  title: "Phyo POS",
-  description: "Family delivery-bag POS",
+  title: "Diva Delivery Bag",
+  description: "Diva Delivery Bag — family POS",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

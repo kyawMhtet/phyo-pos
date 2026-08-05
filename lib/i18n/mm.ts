@@ -2,7 +2,7 @@ import type { Dictionary } from "./index";
 
 export const mm: Dictionary = {
   common: {
-    appName: "Phyo POS",
+    appName: "Diva Delivery Bag",
     save: "သိမ်းမည်",
     cancel: "ပယ်ဖျက်မည်",
     edit: "ပြင်ဆင်မည်",
@@ -80,6 +80,9 @@ export const mm: Dictionary = {
   orders: {
     title: "အော်ဒါများ",
     search: "ဖောက်သည်အမည် သို့မဟုတ် ဖုန်းနံပါတ်ဖြင့် ရှာရန်",
+    printReceipt: "ဘောက်ချာ ပရင့်ထုတ်ရန်",
+    qty: "အရေအတွက်",
+    thankYou: "မှာယူပေးတဲ့အတွက် ကျေးဇူးတင်ပါသည်။",
     newSale: "အရောင်းအသစ်",
     newSaleTitle: "အရောင်းအသစ်",
     noOrders: "အော်ဒါများ မရှိသေးပါ။",

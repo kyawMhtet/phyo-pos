@@ -14,7 +14,7 @@ export function LocaleToggle({ locale }: { locale: Locale }) {
           <button
             type="submit"
             disabled={locale === value}
-            className={`cursor-pointer px-2.5 py-1 transition-colors disabled:cursor-default ${
+            className={`w-16 cursor-pointer whitespace-nowrap px-2.5 py-1 text-center transition-colors disabled:cursor-default ${
               locale === value
                 ? "bg-accent text-accent-foreground"
                 : "text-muted hover:text-foreground"

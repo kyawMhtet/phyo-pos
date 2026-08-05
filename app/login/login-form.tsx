@@ -22,8 +22,13 @@ export function LoginForm({ dict, locale }: { dict: Dictionary; locale: Locale }
           action={formAction}
           className="space-y-4 rounded-xl border border-border bg-surface p-6 shadow-md"
         >
-          <div className="space-y-1 text-center">
-            <h1 className="font-display text-2xl text-accent">{dict.common.appName}</h1>
+          <div className="space-y-2 text-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.png"
+              alt={dict.common.appName}
+              className="mx-auto h-25 w-auto"
+            />
             <p className="text-sm text-muted">{dict.login.subtitle}</p>
           </div>
           <PasswordInput

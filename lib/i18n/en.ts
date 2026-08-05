@@ -1,6 +1,6 @@
 export const en = {
   common: {
-    appName: "Phyo POS",
+    appName: "Diva Delivery Bag",
     save: "Save",
     cancel: "Cancel",
     edit: "Edit",
@@ -78,6 +78,9 @@ export const en = {
   orders: {
     title: "Orders",
     search: "Search by customer name or phone",
+    printReceipt: "Print receipt",
+    qty: "Qty",
+    thankYou: "Thank you for your order!",
     newSale: "New sale",
     newSaleTitle: "New sale",
     noOrders: "No orders yet.",

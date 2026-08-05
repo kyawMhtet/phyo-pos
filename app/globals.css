@@ -1,32 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  --background: #fafafa;
+  --background: #faf8f5;
   --surface: #ffffff;
-  --foreground: #18181b;
-  --muted: #71717a;
-  --border: #e4e4e7;
-  --accent: #0d9488;
-  --accent-foreground: #f0fdfa;
+  --foreground: #1c1815;
+  --muted: #7a7067;
+  --border: #e8e1d8;
+  --accent: #9a5030;
+  --accent-foreground: #fdf6ef;
   --stamp-pending: #b45309;
   --stamp-paid: #1d4ed8;
   --stamp-delivered: #15803d;
-  --stamp-cancelled: #71717a;
+  --stamp-cancelled: #7a7067;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0b;
-    --surface: #18181b;
-    --foreground: #f4f4f5;
-    --muted: #a1a1aa;
-    --border: #27272a;
-    --accent: #2dd4bf;
-    --accent-foreground: #042f2e;
+    --background: #161310;
+    --surface: #201b16;
+    --foreground: #f3ede4;
+    --muted: #a89b8c;
+    --border: #3a3128;
+    --accent: #d3925f;
+    --accent-foreground: #241206;
     --stamp-pending: #f59e0b;
     --stamp-paid: #60a5fa;
     --stamp-delivered: #4ade80;
-    --stamp-cancelled: #a1a1aa;
+    --stamp-cancelled: #a89b8c;
   }
 }
 
@@ -65,4 +65,11 @@ body {
 
 .rise-in {
   animation: rise-in 0.3s ease-out both;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
 }
