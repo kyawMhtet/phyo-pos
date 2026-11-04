@@ -1,6 +1,8 @@
-// Wipes the whole database and rebuilds it from drizzle/*.sql. This project has one
-// database for dev and live, so run through `npm run db:fresh`, which then re-imports
-// the catalog. Every order, customer, expense and stock record is lost for good.
+// Wipes the whole database and rebuilds empty tables from drizzle/*.sql. This project
+// has one database for dev and live, and everything in it is lost for good.
+//
+//   npm run db:wipe    empty database
+//   npm run db:fresh   same, then re-imports the catalog
 import { readdirSync, readFileSync } from "node:fs";
 import { createInterface } from "node:readline";
 import { createClient } from "@libsql/client";

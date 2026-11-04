@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "db:upgrade": "tsx --env-file=.env.local scripts/apply-migration.ts && tsx --env-file=.env.local scripts/import-catalog.ts",
-    "db:fresh": "tsx --env-file=.env.local scripts/fresh-db.ts && tsx --env-file=.env.local scripts/import-catalog.ts"
+    "db:wipe": "tsx --env-file=.env.local scripts/fresh-db.ts",
+    "db:fresh": "npm run db:wipe && tsx --env-file=.env.local scripts/import-catalog.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
