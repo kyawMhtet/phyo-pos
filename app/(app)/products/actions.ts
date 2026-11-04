@@ -3,9 +3,9 @@
 import { z } from "zod";
 import { and, eq, inArray, max, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db/client";
 import { categories, productPacks, products } from "@/lib/db/schema";
+import type { FieldErrors, FormResult } from "@/lib/form";
 import { getDictionary } from "@/lib/i18n";
 import { applyStockChange } from "@/lib/stock";
 
@@ -45,7 +45,9 @@ function refreshCatalogPages() {
   revalidatePath("/");
 }
 
-export async function saveProductLine(input: ProductLineInput): Promise<{ error: string }> {
+export async function saveProductLine(
+  input: ProductLineInput
+): Promise<FormResult & { lineId?: number }> {
   const { dict } = await getDictionary();
 
   const parsed = lineSchema.safeParse(input);
@@ -61,7 +63,9 @@ export async function saveProductLine(input: ProductLineInput): Promise<{ error:
   const sameName = await db.query.categories.findFirst({
     where: sql`lower(${categories.name}) = lower(${data.name})`,
   });
-  if (sameName && sameName.id !== data.id) return { error: dict.products.errorDuplicateName };
+  if (sameName && sameName.id !== data.id) {
+    return { fieldErrors: { name: dict.products.errorDuplicateName } };
+  }
 
   const line = {
     name: data.name,
@@ -149,7 +153,7 @@ export async function saveProductLine(input: ProductLineInput): Promise<{ error:
   });
 
   refreshCatalogPages();
-  redirect(`/products/${lineId}`);
+  return { lineId };
 }
 
 const adjustStockSchema = z.object({
@@ -162,9 +166,13 @@ const adjustStockSchema = z.object({
 
 export type AdjustStockInput = z.infer<typeof adjustStockSchema>;
 
-class NotEnoughStockError extends Error {}
+class NotEnoughStockError extends Error {
+  constructor(readonly fieldErrors: FieldErrors) {
+    super("Not enough stock");
+  }
+}
 
-export async function adjustStock(input: AdjustStockInput): Promise<{ error?: string }> {
+export async function adjustStock(input: AdjustStockInput): Promise<FormResult> {
   const { dict } = await getDictionary();
 
   const parsed = adjustStockSchema.safeParse(input);
@@ -201,12 +209,14 @@ export async function adjustStock(input: AdjustStockInput): Promise<{ error?: st
             : mode === "remove"
               ? -line.amount
               : line.amount - size.stock;
-        if (size.stock + change < 0) throw new NotEnoughStockError();
+        if (size.stock + change < 0) {
+          throw new NotEnoughStockError({ [`stock-${size.id}`]: dict.stock.errorTooMany });
+        }
         if (change !== 0) await applyStockChange(tx, size.id, change, reason);
       }
     });
   } catch (error) {
-    if (error instanceof NotEnoughStockError) return { error: dict.stock.errorTooMany };
+    if (error instanceof NotEnoughStockError) return { fieldErrors: error.fieldErrors };
     throw error;
   }
 

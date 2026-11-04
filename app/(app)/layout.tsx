@@ -3,6 +3,7 @@ import { logout } from "@/app/login/actions";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { BottomNav } from "@/components/bottom-nav";
 import { Sidebar } from "@/components/sidebar";
+import { Toaster } from "@/components/ui/toast";
 
 // Every page here reads live stock/sales data straight from the DB and must
 // never be prerendered — both because Turso credentials aren't available at
@@ -30,6 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       />
       <main className="flex w-full flex-1 flex-col lg:pl-60 print:pl-0">{children}</main>
       <BottomNav labels={dict.nav} />
+      <Toaster />
     </>
   );
 }

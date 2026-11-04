@@ -14,6 +14,8 @@ export const en = {
     previous: "Previous",
     next: "Next",
     noResults: "No results for",
+    required: "This field is required",
+    errorGeneric: "Something went wrong. Check your connection and try again.",
   },
   nav: {
     dashboard: "Home",
@@ -31,6 +33,7 @@ export const en = {
     submit: "Log in",
     submitting: "Checking...",
     wrongPassword: "Wrong password",
+    passwordRequired: "Enter the password",
     showPassword: "Show password",
     hidePassword: "Hide password",
   },
@@ -81,6 +84,9 @@ export const en = {
     unpaid: "Pay later",
     advanceAmount: "Advance received",
     complete: "Complete sale",
+    errorAdvance: "Enter the advance received",
+    errorAdvanceTooMuch: "Advance can't be more than the total",
+    errorDiscountTooMuch: "Discount can't be more than the items",
   },
   products: {
     title: "Products",
@@ -118,10 +124,9 @@ export const en = {
     outCount: "out",
     lowCount: "low",
     stock: "Stock",
-    errorIncomplete: "Fill in the product name and a name for every size.",
-    errorPackIncomplete: "Fill in every 'Sold as' line, or remove the empty one.",
-    errorDuplicateName: "A product with this name already exists.",
-    errorDuplicateSize: "Two sizes have the same name.",
+    errorIncomplete: "Some details are missing. Check the form and try again.",
+    errorDuplicateName: "A product with this name already exists",
+    errorDuplicateSize: "This size is already listed",
   },
   stock: {
     update: "Update stock",
@@ -140,7 +145,7 @@ export const en = {
     reasonOpening: "Opening stock",
     reasonCancelled: "Cancelled order",
     errorNothing: "Enter at least one amount.",
-    errorTooMany: "That would take stock below zero.",
+    errorTooMany: "That's more than the stock you have",
   },
   customers: {
     title: "Customers",
@@ -208,6 +213,8 @@ export const en = {
     errorProductUnavailable: "An item in the cart is no longer available",
     errorNotEnoughStock: "Not enough stock",
     errorPaymentAmount: "Enter the amount received",
+    errorPaymentTooMuch: "More than the balance",
+    errorOrderCancelled: "This order has been cancelled",
   },
   expenses: {
     title: "Expenses",

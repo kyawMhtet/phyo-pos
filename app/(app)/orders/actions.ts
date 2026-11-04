@@ -7,10 +7,12 @@ import { getDb } from "@/lib/db/client";
 import { categories, customers, orderItems, orders, productPacks, products } from "@/lib/db/schema";
 import { getDictionary } from "@/lib/i18n";
 import { parseOptions, sizeLabel } from "@/lib/catalog";
+import { hasErrors, type FieldErrors, type FormResult } from "@/lib/form";
+import { formatMoney } from "@/lib/money";
 import { PAYMENT_METHODS } from "@/lib/orders";
 import { applyStockChange } from "@/lib/stock";
 
-export type OrderResult = { error: string } | { orderId: number };
+export type OrderResult = FormResult & { orderId?: number };
 
 const orderSchema = z.object({
   lines: z
@@ -57,7 +59,6 @@ export async function createOrder(input: OrderInput): Promise<OrderResult> {
   const data = parsed.data;
 
   const isDelivery = data.fulfillment === "delivery";
-  if (isDelivery && !data.customerName) return { error: dict.orders.errorCustomerName };
 
   const db = getDb();
 
@@ -115,10 +116,20 @@ export async function createOrder(input: OrderInput): Promise<OrderResult> {
 
   const itemsSubtotal = items.reduce((sum, item) => sum + item.subtotal, 0);
   const deliveryFee = isDelivery ? data.deliveryFee : 0;
-  const discount = Math.min(data.discount, itemsSubtotal);
+  const discount = data.discount;
   const total = itemsSubtotal + deliveryFee - discount;
+
+  const fieldErrors: FieldErrors = {};
+  if (isDelivery && !data.customerName) fieldErrors.customerName = dict.orders.errorCustomerName;
+  if (discount > itemsSubtotal) fieldErrors.discount = dict.checkout.errorDiscountTooMuch;
+  if (data.payment === "advance") {
+    if (data.advance === 0) fieldErrors.advance = dict.checkout.errorAdvance;
+    else if (data.advance > total) fieldErrors.advance = dict.checkout.errorAdvanceTooMuch;
+  }
+  if (hasErrors(fieldErrors)) return { fieldErrors };
+
   const paidAmount =
-    data.payment === "full" ? total : data.payment === "advance" ? Math.min(data.advance, total) : 0;
+    data.payment === "full" ? total : data.payment === "advance" ? data.advance : 0;
 
   const customerPhone = data.customerPhone || undefined;
   const address = data.address || undefined;
@@ -204,26 +215,37 @@ export async function setOrderStatus(orderId: number, status: "packed" | "delive
 }
 
 const paymentSchema = z.object({
-  amount: z.number().int().positive(),
+  amount: z.number().int().min(0),
   method: z.enum(PAYMENT_METHODS),
 });
 
 export async function recordPayment(
   orderId: number,
   input: z.infer<typeof paymentSchema>
-): Promise<{ error?: string }> {
+): Promise<FormResult> {
   const { dict } = await getDictionary();
   const parsed = paymentSchema.safeParse(input);
-  if (!parsed.success) return { error: dict.orders.errorPaymentAmount };
+  if (!parsed.success || parsed.data.amount === 0) {
+    return { fieldErrors: { amount: dict.orders.errorPaymentAmount } };
+  }
 
   const db = getDb();
   const order = await db.query.orders.findFirst({ where: eq(orders.id, orderId) });
-  if (!order || order.status === "cancelled") return { error: dict.orders.errorPaymentAmount };
+  if (!order || order.status === "cancelled") return { error: dict.orders.errorOrderCancelled };
+
+  const balance = order.total - order.paidAmount;
+  if (parsed.data.amount > balance) {
+    return {
+      fieldErrors: {
+        amount: `${dict.orders.errorPaymentTooMuch} (${formatMoney(balance)})`,
+      },
+    };
+  }
 
   await db
     .update(orders)
     .set({
-      paidAmount: Math.min(order.paidAmount + parsed.data.amount, order.total),
+      paidAmount: order.paidAmount + parsed.data.amount,
       paymentMethod: parsed.data.method,
     })
     .where(eq(orders.id, orderId));

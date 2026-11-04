@@ -1,14 +1,17 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { hasErrors, type FieldErrors } from "@/lib/form";
 import { formatMoney } from "@/lib/money";
 import type { ProductLine } from "@/lib/catalog";
 import type { Dictionary } from "@/lib/i18n";
 import { CloseIcon, EyeIcon, EyeOffIcon, PlusIcon, TrashIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input, Label, NumberInput } from "@/components/ui/input";
+import { FieldError, Input, Label, NumberInput } from "@/components/ui/input";
 import { SectionTitle } from "@/components/ui/page";
+import { useSubmit } from "@/components/ui/use-submit";
 import { saveProductLine } from "./actions";
 
 type PackColumn = { key: string; label: string; units: number | null };
@@ -65,6 +68,7 @@ function initialState(line?: ProductLine) {
 }
 
 export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictionary }) {
+  const router = useRouter();
   const [initial] = useState(() => initialState(line));
   const nextKey = useRef(1);
   const newKey = (prefix: string) => `${prefix}-new-${nextKey.current++}`;
@@ -78,8 +82,9 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
   const [rows, setRows] = useState<SizeRow[]>(() =>
     initial.rows.length > 0 ? initial.rows : [blankRow("size-new-0")]
   );
-  const [error, setError] = useState<string>();
-  const [pending, startTransition] = useTransition();
+  const { pending, fieldErrors, submit, clearError, showFieldErrors } = useSubmit(
+    dict.common.errorGeneric
+  );
 
   function blankRow(key: string): SizeRow {
     return { key, name: "", note: "", isActive: true, stock: null, cells: {} };
@@ -103,51 +108,77 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
     );
   }
 
-  function save() {
-    setError(undefined);
+  // The grid's row and column keys only exist here, so it's checked before sending.
+  function validate(filledRows: SizeRow[]): FieldErrors {
+    const required = dict.common.required;
+    const errors: FieldErrors = {};
 
+    if (!name.trim()) errors.name = required;
+    if (!stockUnit.trim()) errors.stockUnit = required;
+
+    for (const column of columns) {
+      if (!column.label.trim()) errors[`label-${column.key}`] = required;
+      if (!column.units) errors[`units-${column.key}`] = required;
+    }
+
+    if (filledRows.length === 0) errors[`size-${rows[0].key}`] = required;
+
+    const seen = new Set<string>();
+    for (const row of filledRows) {
+      const size = row.name.trim().toLowerCase();
+      if (!size) errors[`size-${row.key}`] = required;
+      else if (seen.has(size)) errors[`size-${row.key}`] = t.errorDuplicateSize;
+      seen.add(size);
+    }
+
+    return errors;
+  }
+
+  function save() {
     const filledRows = rows.filter(
       (row) => row.id || row.name.trim() || Object.values(row.cells).some((c) => c.price !== null)
     );
-    if (columns.some((column) => !column.label.trim() || !column.units)) {
-      setError(t.errorPackIncomplete);
+
+    const errors = validate(filledRows);
+    if (hasErrors(errors)) {
+      showFieldErrors(errors);
       return;
     }
 
-    startTransition(async () => {
-      const result = await saveProductLine({
-        id: line?.id,
-        name,
-        stockUnit,
-        options: options
-          .split(",")
-          .map((option) => option.trim())
-          .filter(Boolean),
-        lowStockAt: lowStockAt ?? 0,
-        sizes: filledRows.map((row) => ({
-          id: row.id,
-          name: row.name,
-          note: row.note,
-          isActive: row.isActive,
-          openingStock: row.id ? 0 : (row.stock ?? 0),
-          packs: columns.flatMap((column) => {
-            const cell = row.cells[column.key];
-            if (!cell || cell.price === null) return [];
-            return [
-              {
-                id: cell.id,
-                label: column.label,
-                unitsPerPack: column.units ?? 1,
-                price: cell.price,
-                costPrice: cell.cost ?? 0,
-              },
-            ];
-          }),
-        })),
-      });
-      // Success redirects, so getting a result back means something was wrong.
-      if (result?.error) setError(result.error);
-    });
+    submit(
+      () =>
+        saveProductLine({
+          id: line?.id,
+          name,
+          stockUnit,
+          options: options
+            .split(",")
+            .map((option) => option.trim())
+            .filter(Boolean),
+          lowStockAt: lowStockAt ?? 0,
+          sizes: filledRows.map((row) => ({
+            id: row.id,
+            name: row.name,
+            note: row.note,
+            isActive: row.isActive,
+            openingStock: row.id ? 0 : (row.stock ?? 0),
+            packs: columns.flatMap((column) => {
+              const cell = row.cells[column.key];
+              if (!cell || cell.price === null) return [];
+              return [
+                {
+                  id: cell.id,
+                  label: column.label,
+                  unitsPerPack: column.units ?? 1,
+                  price: cell.price,
+                  costPrice: cell.cost ?? 0,
+                },
+              ];
+            }),
+          })),
+        }),
+      (result) => router.push(`/products/${result.lineId}`)
+    );
   }
 
   return (
@@ -159,7 +190,11 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
             id="name"
             value={name}
             placeholder={t.namePlaceholder}
-            onChange={(e) => setName(e.target.value)}
+            error={fieldErrors.name}
+            onChange={(e) => {
+              setName(e.target.value);
+              clearError("name");
+            }}
           />
         </div>
         <div>
@@ -179,7 +214,11 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
             id="stockUnit"
             list="unit-suggestions"
             value={stockUnit}
-            onChange={(e) => setStockUnit(e.target.value)}
+            error={fieldErrors.stockUnit}
+            onChange={(e) => {
+              setStockUnit(e.target.value);
+              clearError("stockUnit");
+            }}
           />
           <datalist id="unit-suggestions">
             {UNIT_SUGGESTIONS.map((unit) => (
@@ -207,37 +246,50 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
         </div>
         <div className="space-y-2">
           {columns.map((column) => (
-            <div key={column.key} className="flex items-end gap-2">
-              <div className="min-w-0 flex-1">
-                <Label htmlFor={`label-${column.key}`}>{t.packLabel}</Label>
-                <Input
-                  id={`label-${column.key}`}
-                  value={column.label}
-                  placeholder={t.packLabelPlaceholder}
-                  onChange={(e) => updateColumn(column.key, { label: e.target.value })}
-                />
+            <div key={column.key}>
+              <div className="flex items-end gap-2">
+                <div className="min-w-0 flex-1">
+                  <Label htmlFor={`label-${column.key}`}>{t.packLabel}</Label>
+                  <Input
+                    id={`label-${column.key}`}
+                    value={column.label}
+                    placeholder={t.packLabelPlaceholder}
+                    aria-invalid={fieldErrors[`label-${column.key}`] ? true : undefined}
+                    onChange={(e) => {
+                      updateColumn(column.key, { label: e.target.value });
+                      clearError(`label-${column.key}`);
+                    }}
+                  />
+                </div>
+                <div className="w-36 shrink-0 sm:w-48">
+                  <Label htmlFor={`units-${column.key}`}>
+                    {t.packUnits} ({stockUnit})
+                  </Label>
+                  <NumberInput
+                    id={`units-${column.key}`}
+                    value={column.units}
+                    placeholder="100"
+                    aria-invalid={fieldErrors[`units-${column.key}`] ? true : undefined}
+                    onValueChange={(units) => {
+                      updateColumn(column.key, { units });
+                      clearError(`units-${column.key}`);
+                    }}
+                  />
+                </div>
+                {columns.length > 1 && (
+                  <button
+                    type="button"
+                    aria-label={dict.common.remove}
+                    onClick={() => setColumns((prev) => prev.filter((c) => c.key !== column.key))}
+                    className="flex h-11 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted hover:text-bad"
+                  >
+                    <CloseIcon className="h-4 w-4" />
+                  </button>
+                )}
               </div>
-              <div className="w-36 shrink-0 sm:w-48">
-                <Label htmlFor={`units-${column.key}`}>
-                  {t.packUnits} ({stockUnit})
-                </Label>
-                <NumberInput
-                  id={`units-${column.key}`}
-                  value={column.units}
-                  placeholder="100"
-                  onValueChange={(units) => updateColumn(column.key, { units })}
-                />
-              </div>
-              {columns.length > 1 && (
-                <button
-                  type="button"
-                  aria-label={dict.common.remove}
-                  onClick={() => setColumns((prev) => prev.filter((c) => c.key !== column.key))}
-                  className="flex h-11 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted hover:text-bad"
-                >
-                  <CloseIcon className="h-4 w-4" />
-                </button>
-              )}
+              <FieldError
+                message={fieldErrors[`label-${column.key}`] ?? fieldErrors[`units-${column.key}`]}
+              />
             </div>
           ))}
         </div>
@@ -275,7 +327,11 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
                       id={`size-${row.key}`}
                       value={row.name}
                       placeholder={t.sizeNamePlaceholder}
-                      onChange={(e) => updateRow(row.key, { name: e.target.value })}
+                      aria-invalid={fieldErrors[`size-${row.key}`] ? true : undefined}
+                      onChange={(e) => {
+                        updateRow(row.key, { name: e.target.value });
+                        clearError(`size-${row.key}`);
+                      }}
                     />
                   </div>
                   <div>
@@ -311,6 +367,8 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
                   </button>
                 )}
               </div>
+
+              <FieldError message={fieldErrors[`size-${row.key}`]} />
 
               <div className="mt-2 grid grid-cols-2 items-end gap-2 sm:grid-cols-[repeat(auto-fill,minmax(9rem,1fr))]">
                 {columns.map((column) => {
@@ -374,12 +432,6 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
           {t.addSize}
         </Button>
       </section>
-
-      {error && (
-        <p role="alert" className="rounded-xl bg-bad/10 px-3 py-2 text-sm font-medium text-bad">
-          {error}
-        </p>
-      )}
 
       <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-border bg-background/95 px-4 py-3 backdrop-blur lg:bottom-0 lg:mx-0 lg:rounded-xl lg:border-0 lg:px-0">
         <Button size="lg" className="w-full lg:w-auto lg:min-w-48" disabled={pending} onClick={save}>

@@ -5,10 +5,11 @@ import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db/client";
 import { customers } from "@/lib/db/schema";
+import type { FormResult } from "@/lib/form";
 import { getDictionary } from "@/lib/i18n";
 
 const customerSchema = z.object({
-  name: z.string().trim().min(1),
+  name: z.string().trim(),
   phone: z.string().trim(),
   address: z.string().trim(),
 });
@@ -16,10 +17,11 @@ const customerSchema = z.object({
 export async function saveCustomer(
   customerId: number | null,
   input: z.infer<typeof customerSchema>
-): Promise<{ error?: string }> {
+): Promise<FormResult> {
   const { dict } = await getDictionary();
   const parsed = customerSchema.safeParse(input);
-  if (!parsed.success) return { error: dict.orders.errorCustomerName };
+  if (!parsed.success) return { error: dict.common.errorGeneric };
+  if (!parsed.data.name) return { fieldErrors: { name: dict.common.required } };
 
   const values = {
     name: parsed.data.name,
@@ -35,7 +37,9 @@ export async function saveCustomer(
         customerId ? ne(customers.id, customerId) : undefined
       ),
     });
-    if (samePhone) return { error: `${dict.customers.errorDuplicatePhone}: ${samePhone.name}` };
+    if (samePhone) {
+      return { fieldErrors: { phone: `${dict.customers.errorDuplicatePhone} ${samePhone.name}` } };
+    }
   }
 
   if (customerId) {

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import type { Dictionary } from "@/lib/i18n";
 import { PlusIcon, TrashIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input, Label, NumberInput } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
+import { useSubmit } from "@/components/ui/use-submit";
 import { createExpense, deleteExpense } from "./actions";
 
 export function ExpenseButton({
@@ -47,7 +48,7 @@ function ExpenseForm({
   const [description, setDescription] = useState("");
   const [amount, setAmount] = useState<number | null>(null);
   const [category, setCategory] = useState("");
-  const [pending, startTransition] = useTransition();
+  const { pending, fieldErrors, submit, clearError } = useSubmit(dict.common.errorGeneric);
 
   return (
     <div className="space-y-4">
@@ -56,13 +57,25 @@ function ExpenseForm({
         <Input
           id="description"
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          error={fieldErrors.description}
+          onChange={(e) => {
+            setDescription(e.target.value);
+            clearError("description");
+          }}
         />
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label htmlFor="amount">{dict.expenses.amount}</Label>
-          <NumberInput id="amount" value={amount} onValueChange={setAmount} />
+          <NumberInput
+            id="amount"
+            value={amount}
+            error={fieldErrors.amount}
+            onValueChange={(value) => {
+              setAmount(value);
+              clearError("amount");
+            }}
+          />
         </div>
         <div>
           <Label htmlFor="category">{dict.expenses.category}</Label>
@@ -83,12 +96,9 @@ function ExpenseForm({
       <Button
         size="lg"
         className="w-full"
-        disabled={pending || !description.trim() || !amount}
+        disabled={pending}
         onClick={() =>
-          startTransition(async () => {
-            await createExpense({ description, amount: amount ?? 0, category });
-            onDone();
-          })
+          submit(() => createExpense({ description, amount: amount ?? 0, category }), onDone)
         }
       >
         {pending ? dict.orders.saving : dict.common.save}
@@ -101,12 +111,14 @@ export function DeleteExpenseButton({
   expenseId,
   label,
   confirmLabel,
+  errorLabel,
 }: {
   expenseId: number;
   label: string;
   confirmLabel: string;
+  errorLabel: string;
 }) {
-  const [pending, startTransition] = useTransition();
+  const { pending, submit } = useSubmit(errorLabel);
 
   return (
     <button
@@ -114,7 +126,7 @@ export function DeleteExpenseButton({
       aria-label={label}
       disabled={pending}
       onClick={() => {
-        if (window.confirm(confirmLabel)) startTransition(() => deleteExpense(expenseId));
+        if (window.confirm(confirmLabel)) submit(() => deleteExpense(expenseId));
       }}
       className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-muted hover:bg-sunken hover:text-bad"
     >

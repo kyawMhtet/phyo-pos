@@ -163,6 +163,58 @@ dialog.sheet::backdrop {
   animation: pop 0.18s ease-out;
 }
 
+@keyframes field-error-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.field-error {
+  animation: field-error-in 0.16s ease-out;
+}
+
+/* Sits at the top: the bottom of a phone screen belongs to the nav and cart bar. */
+.toaster {
+  position: fixed;
+  inset: max(0.75rem, env(safe-area-inset-top)) 0.75rem auto;
+  width: auto;
+  height: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  overflow: visible;
+}
+.toaster:popover-open {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+@media (min-width: 768px) {
+  .toaster {
+    left: auto;
+    width: 24rem;
+  }
+}
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.96);
+  }
+}
+@keyframes toast-out {
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.97);
+  }
+}
+.toast {
+  animation: toast-in 0.26s cubic-bezier(0.2, 1.25, 0.4, 1);
+}
+.toast-leaving {
+  animation: toast-out 0.18s ease-in forwards;
+}
+
 @keyframes shimmer {
   50% {
     opacity: 0.55;

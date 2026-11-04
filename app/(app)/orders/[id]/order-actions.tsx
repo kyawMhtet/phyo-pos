@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { formatMoney } from "@/lib/money";
 import {
   PAYMENT_METHODS,
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Label, NumberInput } from "@/components/ui/input";
 import { Chips } from "@/components/ui/segmented";
 import { Sheet } from "@/components/ui/sheet";
+import { useSubmit } from "@/components/ui/use-submit";
 import { cancelOrder, recordPayment, setOrderStatus } from "../actions";
 
 export function OrderActions({
@@ -29,7 +30,7 @@ export function OrderActions({
   paymentMethod: PaymentMethod;
   dict: Dictionary;
 }) {
-  const [pending, startTransition] = useTransition();
+  const { pending, submit } = useSubmit(dict.common.errorGeneric);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
 
@@ -47,7 +48,7 @@ export function OrderActions({
         <Button
           disabled={pending}
           className="flex-1 sm:flex-none"
-          onClick={() => startTransition(() => setOrderStatus(orderId, next.status))}
+          onClick={() => submit(() => setOrderStatus(orderId, next.status))}
         >
           <next.Icon className="h-4 w-4" />
           {next.label}
@@ -105,12 +106,7 @@ export function OrderActions({
             size="lg"
             className="w-full"
             disabled={pending}
-            onClick={() =>
-              startTransition(async () => {
-                await cancelOrder(orderId);
-                setCancelOpen(false);
-              })
-            }
+            onClick={() => submit(() => cancelOrder(orderId), () => setCancelOpen(false))}
           >
             {dict.orders.cancelConfirm}
           </Button>
@@ -135,8 +131,7 @@ function PaymentForm({
 }) {
   const [amount, setAmount] = useState<number | null>(balance);
   const [method, setMethod] = useState(paymentMethod);
-  const [error, setError] = useState<string>();
-  const [pending, startTransition] = useTransition();
+  const { pending, fieldErrors, submit, clearError } = useSubmit(dict.common.errorGeneric);
 
   return (
     <div className="space-y-4">
@@ -144,7 +139,15 @@ function PaymentForm({
         <Label htmlFor="amount">
           {dict.orders.amountReceived} ({dict.orders.balance} {formatMoney(balance)})
         </Label>
-        <NumberInput id="amount" value={amount} onValueChange={setAmount} />
+        <NumberInput
+          id="amount"
+          value={amount}
+          error={fieldErrors.amount}
+          onValueChange={(value) => {
+            setAmount(value);
+            clearError("amount");
+          }}
+        />
       </div>
       <Chips
         value={method}
@@ -154,18 +157,11 @@ function PaymentForm({
           label: paymentMethodLabels(dict)[value],
         }))}
       />
-      {error && <p className="text-sm font-medium text-bad">{error}</p>}
       <Button
         size="lg"
         className="w-full"
-        disabled={pending || !amount}
-        onClick={() =>
-          startTransition(async () => {
-            const result = await recordPayment(orderId, { amount: amount ?? 0, method });
-            if (result.error) setError(result.error);
-            else onDone();
-          })
-        }
+        disabled={pending}
+        onClick={() => submit(() => recordPayment(orderId, { amount: amount ?? 0, method }), onDone)}
       >
         {pending ? dict.orders.saving : dict.common.save}
       </Button>

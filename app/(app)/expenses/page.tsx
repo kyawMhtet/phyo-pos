@@ -70,6 +70,7 @@ export default async function ExpensesPage({
                 expenseId={expense.id}
                 label={dict.common.remove}
                 confirmLabel={dict.expenses.deleteConfirm}
+                errorLabel={dict.common.errorGeneric}
               />
             </li>
           ))}

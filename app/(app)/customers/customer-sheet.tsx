@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import type { Dictionary } from "@/lib/i18n";
 import { PlusIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input, Label, Textarea } from "@/components/ui/input";
 import { Sheet } from "@/components/ui/sheet";
+import { useSubmit } from "@/components/ui/use-submit";
 import { saveCustomer } from "./actions";
 
 type Customer = { id: number; name: string; phone: string | null; address: string | null };
@@ -45,18 +46,34 @@ function CustomerForm({
   const [name, setName] = useState(customer?.name ?? "");
   const [phone, setPhone] = useState(customer?.phone ?? "");
   const [address, setAddress] = useState(customer?.address ?? "");
-  const [error, setError] = useState<string>();
-  const [pending, startTransition] = useTransition();
+  const { pending, fieldErrors, submit, clearError } = useSubmit(dict.common.errorGeneric);
 
   return (
     <div className="space-y-4">
       <div>
         <Label htmlFor="name">{dict.customers.name}</Label>
-        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+        <Input
+          id="name"
+          value={name}
+          error={fieldErrors.name}
+          onChange={(e) => {
+            setName(e.target.value);
+            clearError("name");
+          }}
+        />
       </div>
       <div>
         <Label htmlFor="phone">{dict.customers.phone}</Label>
-        <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
+        <Input
+          id="phone"
+          type="tel"
+          value={phone}
+          error={fieldErrors.phone}
+          onChange={(e) => {
+            setPhone(e.target.value);
+            clearError("phone");
+          }}
+        />
       </div>
       <div>
         <Label htmlFor="address">{dict.customers.address}</Label>
@@ -67,17 +84,12 @@ function CustomerForm({
           onChange={(e) => setAddress(e.target.value)}
         />
       </div>
-      {error && <p className="text-sm font-medium text-bad">{error}</p>}
       <Button
         size="lg"
         className="w-full"
-        disabled={pending || !name.trim()}
+        disabled={pending}
         onClick={() =>
-          startTransition(async () => {
-            const result = await saveCustomer(customer?.id ?? null, { name, phone, address });
-            if (result.error) setError(result.error);
-            else onDone();
-          })
+          submit(() => saveCustomer(customer?.id ?? null, { name, phone, address }), onDone)
         }
       >
         {pending ? dict.orders.saving : dict.common.save}

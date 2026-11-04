@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { login, type LoginState } from "./actions";
 import { Button } from "@/components/ui/button";
+import { FieldError } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { LocaleToggle } from "@/components/locale-toggle";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -38,15 +39,13 @@ export function LoginForm({ dict, locale }: { dict: Dictionary; locale: Locale }
               id="password"
               name="password"
               autoFocus
-              required
+              aria-invalid={state?.error ? true : undefined}
               placeholder={dict.login.passwordPlaceholder}
               showLabel={dict.login.showPassword}
               hideLabel={dict.login.hidePassword}
             />
+            <FieldError message={state?.error} />
           </div>
-          {state?.error && (
-            <p className="text-sm font-medium text-bad">{dict.login.wrongPassword}</p>
-          )}
           <Button type="submit" size="lg" disabled={pending} className="w-full">
             {pending ? dict.login.submitting : dict.login.submit}
           </Button>

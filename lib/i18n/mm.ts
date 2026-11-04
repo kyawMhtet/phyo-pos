@@ -16,6 +16,8 @@ export const mm: Dictionary = {
     previous: "ရှေ့သို့",
     next: "နောက်သို့",
     noResults: "ရလဒ် မတွေ့ပါ —",
+    required: "ဤအကွက်ကို ဖြည့်ရန် လိုအပ်သည်",
+    errorGeneric: "တစ်ခုခု မှားယွင်းနေသည်။ အင်တာနက်ကို စစ်ဆေးပြီး ထပ်စမ်းကြည့်ပါ။",
   },
   nav: {
     dashboard: "ပင်မ",
@@ -33,6 +35,7 @@ export const mm: Dictionary = {
     submit: "ဝင်ရောက်မည်",
     submitting: "စစ်ဆေးနေသည်...",
     wrongPassword: "စကားဝှက် မှားနေသည်",
+    passwordRequired: "စကားဝှက် ထည့်ပါ",
     showPassword: "စကားဝှက် ပြရန်",
     hidePassword: "စကားဝှက် ဖျောက်ရန်",
   },
@@ -83,6 +86,9 @@ export const mm: Dictionary = {
     unpaid: "နောက်မှပေး",
     advanceAmount: "ရရှိသော စရံငွေ",
     complete: "အရောင်း ပြီးမြောက်ရန်",
+    errorAdvance: "ရရှိသော စရံငွေ ဖြည့်ပါ",
+    errorAdvanceTooMuch: "စရံငွေသည် စုစုပေါင်းထက် မများရပါ",
+    errorDiscountTooMuch: "လျှော့စျေးသည် ပစ္စည်းတန်ဖိုးထက် မများရပါ",
   },
   products: {
     title: "ကုန်ပစ္စည်းများ",
@@ -120,10 +126,9 @@ export const mm: Dictionary = {
     outCount: "ကုန်",
     lowCount: "နည်း",
     stock: "ကုန်လက်ကျန်",
-    errorIncomplete: "ကုန်ပစ္စည်းအမည်နှင့် အရွယ်အစားတိုင်း၏ အမည်ကို ဖြည့်ပါ။",
-    errorPackIncomplete: "ရောင်းပုံ လိုင်းတိုင်းကို ဖြည့်ပါ သို့မဟုတ် အလွတ်ကို ဖယ်ပါ။",
-    errorDuplicateName: "ဤအမည်ဖြင့် ကုန်ပစ္စည်း ရှိပြီးသားပါ။",
-    errorDuplicateSize: "အရွယ်အစားအမည် နှစ်ခု တူနေသည်။",
+    errorIncomplete: "အချက်အလက် မပြည့်စုံပါ။ စစ်ဆေးပြီး ထပ်စမ်းကြည့်ပါ။",
+    errorDuplicateName: "ဤအမည်ဖြင့် ကုန်ပစ္စည်း ရှိပြီးသားပါ",
+    errorDuplicateSize: "ဤအရွယ်အစား ရှိပြီးသားပါ",
   },
   stock: {
     update: "ကုန်လက်ကျန် ပြင်ရန်",
@@ -142,7 +147,7 @@ export const mm: Dictionary = {
     reasonOpening: "အစ ကုန်လက်ကျန်",
     reasonCancelled: "ပယ်ဖျက်အော်ဒါ",
     errorNothing: "ပမာဏ အနည်းဆုံး တစ်ခု ဖြည့်ပါ။",
-    errorTooMany: "ကုန်လက်ကျန် သုညအောက် ရောက်သွားမည်။",
+    errorTooMany: "ရှိသော ကုန်လက်ကျန်ထက် များနေသည်",
   },
   customers: {
     title: "ဖောက်သည်များ",
@@ -210,6 +215,8 @@ export const mm: Dictionary = {
     errorProductUnavailable: "ခြင်းတောင်းထဲမှ ပစ္စည်းတစ်ခု မရရှိတော့ပါ",
     errorNotEnoughStock: "ကုန်လက်ကျန် မလုံလောက်ပါ",
     errorPaymentAmount: "ရရှိသောငွေ ဖြည့်ပါ",
+    errorPaymentTooMuch: "ကျန်ငွေထက် များနေသည်",
+    errorOrderCancelled: "ဤအော်ဒါကို ပယ်ဖျက်ပြီးပါပြီ",
   },
   expenses: {
     title: "ကုန်ကျစရိတ်",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { formatMoney } from "@/lib/money";
 import { PAYMENT_METHODS, paymentMethodLabels, type PaymentMethod } from "@/lib/orders";
@@ -8,6 +8,7 @@ import type { Dictionary } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Input, Label, NumberInput, Textarea } from "@/components/ui/input";
 import { Chips, Segmented } from "@/components/ui/segmented";
+import { useSubmit } from "@/components/ui/use-submit";
 import { createOrder } from "../orders/actions";
 import type { useCart } from "./use-cart";
 
@@ -38,8 +39,7 @@ export function CheckoutForm({
   dict: Dictionary;
 }) {
   const router = useRouter();
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { pending, fieldErrors, submit, clearError } = useSubmit(dict.common.errorGeneric);
 
   const [fulfillment, setFulfillment] = useState<"delivery" | "pickup">("delivery");
   const [customerId, setCustomerId] = useState<number | null>(null);
@@ -56,8 +56,8 @@ export function CheckoutForm({
 
   const isDelivery = fulfillment === "delivery";
   const fee = isDelivery ? (deliveryFee ?? 0) : 0;
-  const appliedDiscount = Math.min(discount ?? 0, cart.subtotal);
-  const total = cart.subtotal + fee - appliedDiscount;
+  const appliedDiscount = discount ?? 0;
+  const total = Math.max(cart.subtotal + fee - appliedDiscount, 0);
   const paid = payment === "full" ? total : payment === "advance" ? Math.min(advance ?? 0, total) : 0;
   const balance = total - paid;
 
@@ -77,43 +77,41 @@ export function CheckoutForm({
     setName(customer.name);
     setPhone(customer.phone ?? "");
     setAddress(customer.address ?? "");
+    clearError("customerName");
   }
 
-  function submit() {
-    setError(null);
-    startTransition(async () => {
-      const result = await createOrder({
-        lines: cart.lines.map((line) => ({
-          packId: line.packId,
-          quantity: line.quantity,
-          option: line.option,
-        })),
-        fulfillment,
-        customerId,
-        customerName: name,
-        customerPhone: phone,
-        address: isDelivery ? address : "",
-        note,
-        handledBy,
-        deliveryFee: fee,
-        discount: appliedDiscount,
-        payment,
-        advance: advance ?? 0,
-        paymentMethod: method,
-      });
-
-      if ("error" in result) {
-        setError(result.error);
-        return;
+  function completeSale() {
+    submit(
+      () =>
+        createOrder({
+          lines: cart.lines.map((line) => ({
+            packId: line.packId,
+            quantity: line.quantity,
+            option: line.option,
+          })),
+          fulfillment,
+          customerId,
+          customerName: name,
+          customerPhone: phone,
+          address: isDelivery ? address : "",
+          note,
+          handledBy,
+          deliveryFee: fee,
+          discount: appliedDiscount,
+          payment,
+          advance: advance ?? 0,
+          paymentMethod: method,
+        }),
+      (result) => {
+        try {
+          localStorage.setItem(HANDLED_BY_KEY, handledBy);
+        } catch {
+          // Only a convenience; nothing to do if storage is blocked.
+        }
+        router.push(`/orders/${result.orderId}?done=1`);
+        cart.clear();
       }
-      try {
-        localStorage.setItem(HANDLED_BY_KEY, handledBy);
-      } catch {
-        // Only a convenience; nothing to do if storage is blocked.
-      }
-      router.push(`/orders/${result.orderId}?done=1`);
-      cart.clear();
-    });
+    );
   }
 
   return (
@@ -138,9 +136,11 @@ export function CheckoutForm({
             value={name}
             autoComplete="off"
             placeholder={dict.checkout.customerPlaceholder}
+            error={fieldErrors.customerName}
             onChange={(e) => {
               setName(e.target.value);
               setCustomerId(null);
+              clearError("customerName");
             }}
           />
           {matches.length > 0 && (
@@ -199,7 +199,11 @@ export function CheckoutForm({
           <NumberInput
             id="discount"
             value={discount}
-            onValueChange={setDiscount}
+            error={fieldErrors.discount}
+            onValueChange={(value) => {
+              setDiscount(value);
+              clearError("discount");
+            }}
             placeholder="0"
           />
         </div>
@@ -221,7 +225,16 @@ export function CheckoutForm({
         {payment === "advance" && (
           <div>
             <Label htmlFor="advance">{dict.checkout.advanceAmount}</Label>
-            <NumberInput id="advance" value={advance} onValueChange={setAdvance} placeholder="0" />
+            <NumberInput
+              id="advance"
+              value={advance}
+              error={fieldErrors.advance}
+              onValueChange={(value) => {
+                setAdvance(value);
+                clearError("advance");
+              }}
+              placeholder="0"
+            />
           </div>
         )}
         {payment !== "none" && (
@@ -272,17 +285,11 @@ export function CheckoutForm({
         )}
       </div>
 
-      {error && (
-        <p role="alert" className="rounded-xl bg-bad/10 px-3 py-2 text-sm font-medium text-bad">
-          {error}
-        </p>
-      )}
-
       <Button
         size="lg"
         className="w-full"
-        disabled={pending || cart.count === 0 || (isDelivery && !name.trim())}
-        onClick={submit}
+        disabled={pending || cart.count === 0}
+        onClick={completeSale}
       >
         {pending ? dict.orders.saving : dict.checkout.complete}
       </Button>
