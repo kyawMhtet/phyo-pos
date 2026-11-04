@@ -3,7 +3,7 @@ import type { Locale } from "@/lib/i18n";
 
 export function LocaleToggle({ locale }: { locale: Locale }) {
   return (
-    <div className="inline-flex overflow-hidden rounded-full border border-border text-xs">
+    <div className="inline-flex overflow-hidden rounded-full border border-current/20 text-xs">
       {(
         [
           ["mm", "မြန်မာ"],
@@ -17,7 +17,7 @@ export function LocaleToggle({ locale }: { locale: Locale }) {
             className={`w-16 cursor-pointer whitespace-nowrap px-2.5 py-1 text-center transition-colors disabled:cursor-default ${
               locale === value
                 ? "bg-accent text-accent-foreground"
-                : "text-muted hover:text-foreground"
+                : "opacity-70 hover:opacity-100"
             }`}
           >
             {label}

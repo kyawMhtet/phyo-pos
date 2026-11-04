@@ -2,6 +2,7 @@ import { getDictionary } from "@/lib/i18n";
 import { logout } from "@/app/login/actions";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { BottomNav } from "@/components/bottom-nav";
+import { Sidebar } from "@/components/sidebar";
 
 // Every page here reads live stock/sales data straight from the DB and must
 // never be prerendered — both because Turso credentials aren't available at
@@ -13,26 +14,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <header className="sticky top-0 z-10 border-b border-border bg-background/80 backdrop-blur print:hidden">
-        <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-4 py-1.5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt={dict.common.appName} className="h-25 w-auto" />
-          <div className="flex items-center gap-3">
+      <Sidebar
+        labels={dict.nav}
+        appName={dict.common.appName}
+        footer={
+          <>
             <LocaleToggle locale={locale} />
             <form action={logout}>
-              <button
-                type="submit"
-                className="cursor-pointer text-xs text-muted hover:text-foreground"
-              >
+              <button type="submit" className="cursor-pointer text-xs hover:text-ink-foreground">
                 {dict.common.logout}
               </button>
             </form>
-          </div>
-        </div>
-      </header>
-      <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 pb-24 print:p-0">
-        {children}
-      </main>
+          </>
+        }
+      />
+      <main className="flex w-full flex-1 flex-col lg:pl-60 print:pl-0">{children}</main>
       <BottomNav labels={dict.nav} />
     </>
   );

@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:upgrade": "tsx --env-file=.env.local scripts/apply-migration.ts && tsx --env-file=.env.local scripts/import-catalog.ts"
   },
   "dependencies": {
     "@libsql/client": "^0.17.4",
@@ -26,6 +27,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
     "tailwindcss": "^4",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }

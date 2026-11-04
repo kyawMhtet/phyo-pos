@@ -1,47 +1,66 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf8f5;
-  --surface: #ffffff;
-  --foreground: #1c1815;
-  --muted: #7a7067;
-  --border: #e8e1d8;
-  --accent: #9a5030;
-  --accent-foreground: #fdf6ef;
-  --stamp-pending: #b45309;
-  --stamp-paid: #1d4ed8;
-  --stamp-delivered: #15803d;
-  --stamp-cancelled: #7a7067;
+  --background: #f6f1e7;
+  --surface: #fffdf9;
+  --sunken: #efe7d9;
+  --foreground: #261a11;
+  --muted: #6f6152;
+  --border: #e3d8c6;
+  --accent: #9b501c;
+  --accent-foreground: #fff8f0;
+  --chart: #9b501c;
+  --gold: #e0a03a;
+  --ink: #241811;
+  --ink-foreground: #f6ecdf;
+  --ink-muted: #b6a593;
+  --ink-line: #3c2c20;
+  --good: #1f7a4d;
+  --warn: #a8620a;
+  --info: #2a62a8;
+  --bad: #b83227;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #161310;
-    --surface: #201b16;
-    --foreground: #f3ede4;
-    --muted: #a89b8c;
-    --border: #3a3128;
-    --accent: #d3925f;
-    --accent-foreground: #241206;
-    --stamp-pending: #f59e0b;
-    --stamp-paid: #60a5fa;
-    --stamp-delivered: #4ade80;
-    --stamp-cancelled: #a89b8c;
+    --background: #15100c;
+    --surface: #1f1812;
+    --sunken: #2a2119;
+    --foreground: #f5ecdf;
+    --muted: #ab9b89;
+    --border: #3a2e23;
+    --accent: #e0935a;
+    --accent-foreground: #261206;
+    --chart: #c9783c;
+    --gold: #e6ac4e;
+    --ink: #0f0b08;
+    --ink-line: #2c2118;
+    --good: #5cc48f;
+    --warn: #eaa64a;
+    --info: #7fb0ee;
+    --bad: #f0857a;
   }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
-  --color-stamp-pending: var(--stamp-pending);
-  --color-stamp-paid: var(--stamp-paid);
-  --color-stamp-delivered: var(--stamp-delivered);
-  --color-stamp-cancelled: var(--stamp-cancelled);
+  --color-chart: var(--chart);
+  --color-gold: var(--gold);
+  --color-ink: var(--ink);
+  --color-ink-foreground: var(--ink-foreground);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-line: var(--ink-line);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-info: var(--info);
+  --color-bad: var(--bad);
   --font-display: var(--font-display-raw), var(--font-myanmar-raw), sans-serif;
   --font-body: var(--font-body-raw), var(--font-myanmar-raw), sans-serif;
 }
@@ -52,19 +71,123 @@ body {
   font-family: var(--font-body);
 }
 
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+/* Burmese stacks marks above and below the line and clips at Latin line-heights. */
+html:lang(my) {
+  line-height: 1.7;
+}
+
+.money {
+  font-variant-numeric: tabular-nums;
+}
+
+/* The punched hole of the hang-tag in the logo — product tiles are price tags. */
+.tag-hole::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--color-background);
+  box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.22);
+}
+
+/* Torn bottom edge of a printed receipt. */
+.receipt {
+  --tooth: 7px;
+  padding-bottom: calc(var(--tooth) + 1rem);
+  mask:
+    conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom /
+      calc(2 * var(--tooth)) var(--tooth) repeat-x,
+    linear-gradient(#000 0 0) top / 100% calc(100% - var(--tooth) + 1px) no-repeat;
+}
+
+.scroll-none {
+  scrollbar-width: none;
+}
+.scroll-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Bottom sheet on phones, centred dialog from tablet up. */
+dialog.sheet {
+  margin: auto 0 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: 92dvh;
+  padding: 0;
+  border: 0;
+  border-radius: 1.25rem 1.25rem 0 0;
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  overflow: hidden;
+}
+dialog.sheet[open] {
+  display: flex;
+  flex-direction: column;
+  animation: sheet-up 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+dialog.sheet::backdrop {
+  background: rgb(26 16 8 / 0.5);
+  animation: fade-in 0.2s ease-out;
+}
+@media (min-width: 768px) {
+  dialog.sheet {
+    margin: auto;
+    width: calc(100% - 2rem);
+    max-width: 34rem;
+    max-height: 88dvh;
+    border-radius: 1.25rem;
+    box-shadow: 0 24px 60px rgb(26 16 8 / 0.35);
   }
 }
 
-.rise-in {
-  animation: rise-in 0.3s ease-out both;
+@keyframes sheet-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pop {
+  50% {
+    transform: scale(1.18);
+  }
+}
+.pop {
+  animation: pop 0.18s ease-out;
+}
+
+@keyframes shimmer {
+  50% {
+    opacity: 0.55;
+  }
+}
+.skeleton {
+  border-radius: 0.75rem;
+  background: var(--color-sunken);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after,
+  dialog.sheet[open],
+  dialog.sheet::backdrop {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@page {
+  size: A5;
+  margin: 10mm;
 }
 
 @media print {

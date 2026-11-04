@@ -1,27 +1,20 @@
-import Link from "next/link";
-import { and, eq, gte, ne } from "drizzle-orm";
+import { and, eq, gte, ne, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { expenses, orderItems, orders } from "@/lib/db/schema";
 import { formatMoney } from "@/lib/money";
+import { addDays, formatShortDate, startOfDay } from "@/lib/time";
 import { getDictionary } from "@/lib/i18n";
+import { ChartIcon } from "@/components/icons";
 import { Card } from "@/components/ui/card";
+import { DailyBars } from "@/components/ui/daily-bars";
+import { Empty, FilterTabs, Page, PageHeader, SectionTitle, Stat } from "@/components/ui/page";
 
 type Range = "today" | "7d" | "30d" | "all";
 
 function rangeStart(range: Range): Date | undefined {
-  const start = new Date();
-  if (range === "today") {
-    start.setHours(0, 0, 0, 0);
-    return start;
-  }
-  if (range === "7d") {
-    start.setDate(start.getDate() - 7);
-    return start;
-  }
-  if (range === "30d") {
-    start.setDate(start.getDate() - 30);
-    return start;
-  }
+  if (range === "today") return startOfDay();
+  if (range === "7d") return addDays(startOfDay(), -6);
+  if (range === "30d") return addDays(startOfDay(), -29);
   return undefined;
 }
 
@@ -42,10 +35,11 @@ export default async function ReportsPage({
     ? and(gte(orders.createdAt, start), ne(orders.status, "cancelled"))
     : ne(orders.status, "cancelled");
 
-  const [items, rangeOrders, rangeExpenses] = await Promise.all([
+  const [items, rangeOrders, rangeExpenses, [outstanding]] = await Promise.all([
     db
       .select({
         productName: orderItems.productName,
+        packLabel: orderItems.packLabel,
         quantity: orderItems.quantity,
         unitCost: orderItems.unitCost,
         subtotal: orderItems.subtotal,
@@ -53,11 +47,18 @@ export default async function ReportsPage({
       .from(orderItems)
       .innerJoin(orders, eq(orderItems.orderId, orders.id))
       .where(orderWhere),
-    db.select({ total: orders.total }).from(orders).where(orderWhere),
+    db
+      .select({ total: orders.total, createdAt: orders.createdAt })
+      .from(orders)
+      .where(orderWhere),
     db
       .select({ amount: expenses.amount })
       .from(expenses)
       .where(start ? gte(expenses.createdAt, start) : undefined),
+    db
+      .select({ amount: sql<number>`coalesce(sum(${orders.total} - ${orders.paidAmount}), 0)` })
+      .from(orders)
+      .where(ne(orders.status, "cancelled")),
   ]);
 
   const revenue = rangeOrders.reduce((sum, o) => sum + o.total, 0);
@@ -68,18 +69,35 @@ export default async function ReportsPage({
 
   const breakdown = new Map<
     string,
-    { units: number; revenue: number; cost: number }
+    { name: string; pack: string | null; units: number; revenue: number; cost: number }
   >();
   for (const item of items) {
-    const entry = breakdown.get(item.productName) ?? { units: 0, revenue: 0, cost: 0 };
+    const key = `${item.productName}|${item.packLabel ?? ""}`;
+    const entry = breakdown.get(key) ?? {
+      name: item.productName,
+      pack: item.packLabel,
+      units: 0,
+      revenue: 0,
+      cost: 0,
+    };
     entry.units += item.quantity;
     entry.revenue += item.subtotal;
     entry.cost += item.unitCost * item.quantity;
-    breakdown.set(item.productName, entry);
+    breakdown.set(key, entry);
   }
-  const breakdownRows = Array.from(breakdown.entries()).sort(
-    (a, b) => b[1].revenue - a[1].revenue
-  );
+  const breakdownRows = Array.from(breakdown.values()).sort((a, b) => b.revenue - a.revenue);
+
+  const chartDays = range === "7d" ? 7 : range === "30d" ? 30 : 0;
+  const daily = Array.from({ length: chartDays }, (_, index) => {
+    const dayStart = addDays(startOfDay(), index - chartDays + 1);
+    const dayEnd = addDays(dayStart, 1);
+    return {
+      label: formatShortDate(dayStart),
+      value: rangeOrders
+        .filter((o) => o.createdAt >= dayStart && o.createdAt < dayEnd)
+        .reduce((sum, o) => sum + o.total, 0),
+    };
+  });
 
   const ranges: { value: Range; label: string }[] = [
     { value: "today", label: dict.reports.today },
@@ -87,83 +105,69 @@ export default async function ReportsPage({
     { value: "30d", label: dict.reports.last30 },
     { value: "all", label: dict.reports.allTime },
   ];
+  const currency = dict.common.currency;
 
   return (
-    <div className="space-y-6">
-      <h1 className="font-display text-lg text-accent">{dict.reports.title}</h1>
+    <Page>
+      <PageHeader title={dict.reports.title} />
 
-      <div className="flex gap-1 overflow-x-auto">
-        {ranges.map((r) => (
-          <Link
-            key={r.value}
-            href={`/reports?range=${r.value}`}
-            className={`whitespace-nowrap rounded-full border px-3 py-1 text-sm transition-colors ${
-              range === r.value
-                ? "border-accent bg-accent text-accent-foreground"
-                : "border-border text-muted hover:text-foreground"
-            }`}
-          >
-            {r.label}
-          </Link>
-        ))}
-      </div>
+      <FilterTabs
+        tabs={ranges.map((r) => ({
+          href: `/reports?range=${r.value}`,
+          label: r.label,
+          active: range === r.value,
+        }))}
+      />
 
-      <div className="grid grid-cols-2 gap-3">
-        <Card>
-          <p className="text-xs text-muted">{dict.reports.revenue}</p>
-          <p className="text-lg font-semibold">
-            {formatMoney(revenue)} {dict.common.currency}
-          </p>
-        </Card>
-        <Card>
-          <p className="text-xs text-muted">{dict.reports.cogs}</p>
-          <p className="text-lg font-semibold">
-            {formatMoney(cogs)} {dict.common.currency}
-          </p>
-        </Card>
-        <Card>
-          <p className="text-xs text-muted">{dict.reports.grossProfit}</p>
-          <p className="text-lg font-semibold">
-            {formatMoney(grossProfit)} {dict.common.currency}
-          </p>
-        </Card>
-        <Card>
-          <p className="text-xs text-muted">{dict.reports.expenses}</p>
-          <p className="text-lg font-semibold text-red-600">
-            {formatMoney(expensesTotal)} {dict.common.currency}
-          </p>
-        </Card>
-      </div>
-
-      <Card className="border-accent">
-        <p className="text-xs text-muted">{dict.reports.netProfit}</p>
-        <p className="text-2xl font-semibold text-accent">
-          {formatMoney(netProfit)} {dict.common.currency}
+      <div className="rounded-2xl bg-ink p-5 text-ink-foreground">
+        <p className="text-sm text-ink-muted">{dict.reports.netProfit}</p>
+        <p className="money mt-1 font-display text-4xl font-semibold tracking-tight">
+          {formatMoney(netProfit)}
+          <span className="ml-1.5 text-base font-medium text-ink-muted">{currency}</span>
         </p>
-      </Card>
-
-      <div className="space-y-3">
-        <p className="text-sm font-medium">{dict.reports.breakdown}</p>
-        {breakdownRows.length === 0 && (
-          <p className="text-sm text-muted">{dict.reports.noData}</p>
-        )}
-        {breakdownRows.map(([name, entry]) => (
-          <Card key={name} className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">{name}</p>
-              <p className="text-xs text-muted">
-                {entry.units} {dict.reports.unitsSold.toLowerCase()}
-              </p>
-            </div>
-            <div className="text-right">
-              <p className="font-medium">{formatMoney(entry.revenue)}</p>
-              <p className="text-xs text-muted">
-                +{formatMoney(entry.revenue - entry.cost)}
-              </p>
-            </div>
-          </Card>
-        ))}
       </div>
-    </div>
+
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat label={dict.reports.revenue} value={formatMoney(revenue)} />
+        <Stat label={dict.reports.cogs} value={formatMoney(cogs)} />
+        <Stat label={dict.reports.expenses} value={formatMoney(expensesTotal)} />
+        <Stat label={dict.reports.outstanding} value={formatMoney(outstanding.amount)} />
+      </div>
+
+      {chartDays > 0 && (
+        <Card className="space-y-3">
+          <SectionTitle>{dict.reports.dailySales}</SectionTitle>
+          <DailyBars data={daily} unit={currency} />
+        </Card>
+      )}
+
+      <section className="space-y-3">
+        <SectionTitle>{dict.reports.breakdown}</SectionTitle>
+        {breakdownRows.length === 0 ? (
+          <Empty icon={<ChartIcon />} title={dict.reports.noData} />
+        ) : (
+          <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
+            {breakdownRows.map((row) => (
+              <li
+                key={`${row.name}|${row.pack}`}
+                className="flex items-center justify-between gap-3 px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium">{row.name}</p>
+                  <p className="money text-sm text-muted">
+                    {row.pack ? `${row.pack} · ` : ""}
+                    {row.units} {dict.reports.unitsSold}
+                  </p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="money font-semibold">{formatMoney(row.revenue)}</p>
+                  <p className="money text-sm text-good">+{formatMoney(row.revenue - row.cost)}</p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </Page>
   );
 }

@@ -11,8 +11,11 @@ Family-only, zero-budget delivery-bag POS. Single family, single shared login �
 
 ## Data conventions
 - **Money is always an integer** (whole currency unit — no floats, no cents-as-decimals). Format for display with `lib/money.ts#formatMoney`, never inline `toFixed`/`toLocaleString` calls.
-- **Stock changes only ever go through `order_items` (sale) or `stock_adjustments` (manual restock/correction/damage)** via `app/(app)/products/actions.ts#adjustStock`. Never write to `products.stock` directly from anywhere else — the adjustment log is what makes stock history trustworthy.
-- **Snapshot, don't reference-only**: `orders` stores `customerName`/`customerPhone`/`address` and `order_items` stores `productName`/`unitPrice` at time of sale, even though `customerId`/`productId` FKs also exist. Editing a customer or product later must never rewrite past order history.
+- **Catalog is three levels, matching the printed price lists.** `categories` = a product line ("China Made Deli Bag", what the UI calls a product). `products` = one size of it, holding `stock` in the line's `stockUnit`. `product_packs` = how a size is sold ("100 pcs", "1 kg", "1 roll"), each with its own price and `unitsPerPack`. Selling a pack takes `unitsPerPack` off the size's shared stock. Read prices from `product_packs`, not `products.price` (a legacy mirror of the first pack).
+- **Stock changes only ever go through `order_items` (sale) or `stock_adjustments`** (restock/count/damage via `app/(app)/products/actions.ts#adjustStock`, opening stock and cancelled orders via `lib/stock.ts#applyStockChange`). Never write to `products.stock` directly from anywhere else — the adjustment log is what makes stock history trustworthy.
+- **Order state is two independent things.** `status` is fulfilment (`pending` → `packed` → `delivered`, or `cancelled`, which is final and returns stock). Payment is `paidAmount` against `total`; use `lib/orders.ts#paymentState`.
+- **Snapshot, don't reference-only**: `orders` stores `customerName`/`customerPhone`/`address` and `order_items` stores `productName`/`packLabel`/`unitsPerPack`/`optionLabel`/`unitPrice` at time of sale, even though `customerId`/`productId` FKs also exist. Editing a customer or product later must never rewrite past order history.
+- **Dates use Myanmar time, not the server's clock**: compute day boundaries and format through `lib/time.ts`, never `toLocaleString`/`setHours`.
 - Server Actions must re-look-up price/stock/name from the DB by id — never trust a price or subtotal sent from the client.
 
 ## Next.js 16 specifics (this repo, not the Next.js you remember)

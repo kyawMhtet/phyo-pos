@@ -2,12 +2,16 @@ import { HTMLAttributes } from "react";
 
 export function Card({
   className = "",
+  flush = false,
   children,
   ...props
-}: HTMLAttributes<HTMLDivElement>) {
+}: HTMLAttributes<HTMLDivElement> & {
+  /** No padding, for lists whose rows run edge to edge. */
+  flush?: boolean;
+}) {
   return (
     <div
-      className={`rounded-xl border border-border bg-surface p-4 shadow-sm transition-shadow ${className}`}
+      className={`overflow-hidden rounded-2xl border border-border bg-surface ${flush ? "" : "p-4"} ${className}`}
       {...props}
     >
       {children}

@@ -11,11 +11,11 @@ Before writing code, read `CLAUDE.md`'s "Project rules — Phyo POS" section and
 
 - Server Actions live in a colocated `actions.ts` next to the route, marked `"use server"`, and call `revalidatePath` on every path the mutation affects.
 - Data reads happen directly in async Server Components via `getDb()` from `lib/db/client.ts` — no separate API/fetch layer.
-- Forms that need client-side interactivity (repeatable rows, live totals, inline validation feedback) are a small `"use client"` component using `useActionState`, mirroring `app/(app)/orders/new/new-sale-form.tsx`.
+- Forms that need client-side interactivity (repeatable rows, live totals, inline validation feedback) are a small `"use client"` component using `useActionState`, mirroring `app/(app)/sell/checkout-form.tsx`.
 - Money is always an integer, formatted for display with `formatMoney` from `lib/money.ts` — never inline formatting.
-- Reuse `components/ui/*` (Button, Input, Select, Textarea, Label, Card) instead of writing new styled primitives. Layout is mobile-first Tailwind, since this is used from a phone.
-- Stock only ever changes through `order_items` (a sale) or `stock_adjustments` (`adjustStock` in `app/(app)/products/actions.ts`) — never write to `products.stock` directly from a new feature.
+- Reuse `components/ui/*` (Button, Input, NumberInput, Card, Sheet, Segmented, Chips, Stepper, Page, PageHeader) instead of writing new styled primitives. Layout is mobile-first Tailwind, since this is used from a phone.
+- Stock only ever changes through `order_items` (a sale) or `stock_adjustments` (`adjustStock` in `app/(app)/products/actions.ts`, or `applyStockChange` in `lib/stock.ts`) — never write to `products.stock` directly from a new feature.
 - Never trust client-submitted prices/subtotals/stock counts — re-derive them server-side from the DB by id inside the Server Action, the same way `createOrder` in `app/(app)/orders/actions.ts` does.
-- New protected routes go under `app/(app)/` so `proxy.ts`'s auth gate and the shared nav in `app/(app)/layout.tsx` apply automatically; add a link in that layout's `links` array if the feature deserves top-level nav.
+- New protected routes go under `app/(app)/` so `proxy.ts`'s auth gate and the shared nav in `app/(app)/layout.tsx` apply automatically; add it to `components/sidebar.tsx` and `app/(app)/more/page.tsx` if the feature deserves nav.
 
 Keep additions scoped to what was asked — this is a small family tool, not a product. Don't add roles, multi-tenancy, or configurability nobody asked for.
