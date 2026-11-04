@@ -6,6 +6,7 @@ import { formatDate, startOfMonth } from "@/lib/time";
 import { getDictionary } from "@/lib/i18n";
 import { PAGE_SIZE, parsePage } from "@/lib/pagination";
 import { CoinIcon } from "@/components/icons";
+import { PageHelp } from "@/components/page-help";
 import { Empty, Page, PageHeader, Stat } from "@/components/ui/page";
 import { Pagination } from "@/components/ui/pagination";
 import { DeleteExpenseButton, ExpenseButton } from "./expense-sheet";
@@ -39,6 +40,7 @@ export default async function ExpensesPage({
     <Page>
       <PageHeader
         title={dict.expenses.title}
+        help={<PageHelp topic="expenses" dict={dict} />}
         actions={
           <ExpenseButton
             categories={usedCategories.flatMap((row) => row.category ?? [])}

@@ -11,7 +11,7 @@ import {
 import type { Dictionary } from "@/lib/i18n";
 import { CheckIcon, CoinIcon, PrinterIcon, TruckIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { Label, NumberInput } from "@/components/ui/input";
+import { Hint, Label, NumberInput } from "@/components/ui/input";
 import { Chips } from "@/components/ui/segmented";
 import { Sheet } from "@/components/ui/sheet";
 import { useSubmit } from "@/components/ui/use-submit";
@@ -43,39 +43,44 @@ export function OrderActions({
         : null;
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div>
+      <div className="flex flex-wrap gap-2">
+        {next && (
+          <Button
+            disabled={pending}
+            className="flex-1 sm:flex-none"
+            onClick={() => submit(() => setOrderStatus(orderId, next.status))}
+          >
+            <next.Icon className="h-4 w-4" />
+            {next.label}
+          </Button>
+        )}
+        {balance > 0 && !cancelled && (
+          <Button
+            variant={next ? "secondary" : "primary"}
+            className="flex-1 sm:flex-none"
+            onClick={() => setPaymentOpen(true)}
+          >
+            <CoinIcon className="h-4 w-4" />
+            {dict.orders.recordPayment}
+          </Button>
+        )}
+        <Button variant="secondary" className="flex-1 sm:flex-none" onClick={() => window.print()}>
+          <PrinterIcon className="h-4 w-4" />
+          {dict.orders.printReceipt}
+        </Button>
+        {!cancelled && (
+          <Button
+            variant="ghost"
+            className="text-bad hover:text-bad sm:ml-auto"
+            onClick={() => setCancelOpen(true)}
+          >
+            {dict.orders.cancelOrder}
+          </Button>
+        )}
+      </div>
       {next && (
-        <Button
-          disabled={pending}
-          className="flex-1 sm:flex-none"
-          onClick={() => submit(() => setOrderStatus(orderId, next.status))}
-        >
-          <next.Icon className="h-4 w-4" />
-          {next.label}
-        </Button>
-      )}
-      {balance > 0 && !cancelled && (
-        <Button
-          variant={next ? "secondary" : "primary"}
-          className="flex-1 sm:flex-none"
-          onClick={() => setPaymentOpen(true)}
-        >
-          <CoinIcon className="h-4 w-4" />
-          {dict.orders.recordPayment}
-        </Button>
-      )}
-      <Button variant="secondary" className="flex-1 sm:flex-none" onClick={() => window.print()}>
-        <PrinterIcon className="h-4 w-4" />
-        {dict.orders.printReceipt}
-      </Button>
-      {!cancelled && (
-        <Button
-          variant="ghost"
-          className="text-bad hover:text-bad sm:ml-auto"
-          onClick={() => setCancelOpen(true)}
-        >
-          {dict.orders.cancelOrder}
-        </Button>
+        <Hint>{status === "pending" ? dict.orders.nextPending : dict.orders.nextPacked}</Hint>
       )}
 
       <Sheet

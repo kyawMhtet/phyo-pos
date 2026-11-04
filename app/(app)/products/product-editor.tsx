@@ -4,12 +4,13 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { hasErrors, type FieldErrors } from "@/lib/form";
 import { formatMoney } from "@/lib/money";
-import type { ProductLine } from "@/lib/catalog";
+import { packsFrom, type ProductLine } from "@/lib/catalog";
+import { fill } from "@/lib/text";
 import type { Dictionary } from "@/lib/i18n";
 import { CloseIcon, EyeIcon, EyeOffIcon, PlusIcon, TrashIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { FieldError, Input, Label, NumberInput } from "@/components/ui/input";
+import { FieldError, Hint, Input, Label, NumberInput } from "@/components/ui/input";
 import { SectionTitle } from "@/components/ui/page";
 import { useSubmit } from "@/components/ui/use-submit";
 import { saveProductLine } from "./actions";
@@ -108,6 +109,16 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
     );
   }
 
+  // "= 3 × 100 pcs": what the stock in this row adds up to in packs.
+  function coverage(row: SizeRow) {
+    return columns
+      .filter(
+        (column) => (column.units ?? 0) > 1 && column.label.trim() && row.cells[column.key]?.price
+      )
+      .map((column) => `${packsFrom(row.stock ?? 0, column.units ?? 1)} × ${column.label.trim()}`)
+      .join(" · ");
+  }
+
   // The grid's row and column keys only exist here, so it's checked before sending.
   function validate(filledRows: SizeRow[]): FieldErrors {
     const required = dict.common.required;
@@ -196,6 +207,7 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
               clearError("name");
             }}
           />
+          <Hint>{t.nameHint}</Hint>
         </div>
         <div>
           <Label htmlFor="options">
@@ -207,6 +219,7 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
             placeholder={t.optionsPlaceholder}
             onChange={(e) => setOptions(e.target.value)}
           />
+          <Hint>{t.optionsHint}</Hint>
         </div>
         <div>
           <Label htmlFor="stockUnit">{t.stockUnit}</Label>
@@ -225,6 +238,7 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
               <option key={unit} value={unit} />
             ))}
           </datalist>
+          <Hint>{t.stockUnitHint}</Hint>
         </div>
         <div>
           <Label htmlFor="lowStockAt">
@@ -236,6 +250,7 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
             onValueChange={setLowStockAt}
             placeholder="0"
           />
+          <Hint>{t.lowStockHint}</Hint>
         </div>
       </Card>
 
@@ -243,6 +258,11 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
         <div>
           <SectionTitle>{t.packsTitle}</SectionTitle>
           <p className="text-sm text-muted">{t.packsHint}</p>
+          <ul className="mt-2 space-y-0.5 rounded-xl bg-sunken px-3 py-2 text-[13px] text-muted">
+            <li>{t.packExample1}</li>
+            <li>{t.packExample2}</li>
+            <li>{t.packExample3}</li>
+          </ul>
         </div>
         <div className="space-y-2">
           {columns.map((column) => (
@@ -290,6 +310,15 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
               <FieldError
                 message={fieldErrors[`label-${column.key}`] ?? fieldErrors[`units-${column.key}`]}
               />
+              {column.label.trim() && column.units ? (
+                <Hint className="money">
+                  {fill(t.packPreview, {
+                    label: column.label.trim(),
+                    units: formatMoney(column.units),
+                    unit: stockUnit,
+                  })}
+                </Hint>
+              ) : null}
             </div>
           ))}
         </div>
@@ -309,6 +338,7 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
         <div>
           <SectionTitle>{t.sizesTitle}</SectionTitle>
           <p className="text-sm text-muted">{t.sizesHint}</p>
+          <p className="mt-1 text-sm font-medium">{fill(t.stockCountHint, { unit: stockUnit })}</p>
         </div>
 
         <div className="space-y-2">
@@ -405,6 +435,7 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
                     <span className="money font-semibold text-foreground">
                       {formatMoney(row.stock ?? 0)} {stockUnit}
                     </span>
+                    {coverage(row) && <span className="money block text-xs">= {coverage(row)}</span>}
                   </div>
                 ) : (
                   <div>
@@ -416,6 +447,7 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
                       value={row.stock}
                       onValueChange={(stock) => updateRow(row.key, { stock })}
                     />
+                    {coverage(row) && <Hint className="money">= {coverage(row)}</Hint>}
                   </div>
                 )}
               </div>

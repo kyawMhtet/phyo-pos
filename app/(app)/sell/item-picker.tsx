@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
-import type { ProductLine, Size } from "@/lib/catalog";
+import { packsFrom, type ProductLine, type Size } from "@/lib/catalog";
+import { fill } from "@/lib/text";
 import type { Dictionary } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/input";
@@ -52,9 +53,16 @@ export function ItemPicker({
                 selected ? "border-accent bg-accent/8 ring-1 ring-accent" : "border-border hover:border-accent/60"
               }`}
             >
-              <span className="font-medium">{p.label}</span>
-              <span className="money font-display text-lg font-semibold">
-                {available ? formatMoney(p.price) : dict.sell.outOfStock}
+              <span className="min-w-0">
+                <span className="block font-medium">{p.label}</span>
+                {p.unitsPerPack > 1 && (
+                  <span className="money block text-[13px] text-muted">
+                    {fill(dict.sell.available, { n: packsFrom(freeUnits, p.unitsPerPack) })}
+                  </span>
+                )}
+              </span>
+              <span className="money shrink-0 font-display text-lg font-semibold">
+                {available ? formatMoney(p.price) : dict.sell.notEnough}
               </span>
             </button>
           );
@@ -75,8 +83,15 @@ export function ItemPicker({
       <div className="flex items-center justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-muted">{dict.sell.quantity}</p>
-          <p className="money text-xs text-muted">
-            {formatMoney(freeUnits)} {line.stockUnit} {dict.sell.left}
+          <p className="money text-[13px] text-muted">
+            {pack.unitsPerPack > 1
+              ? fill(dict.sell.maxExplain, {
+                  n: maxQuantity,
+                  stock: formatMoney(freeUnits),
+                  unit: line.stockUnit,
+                  units: pack.unitsPerPack,
+                })
+              : fill(dict.sell.unitsLeft, { stock: formatMoney(freeUnits), unit: line.stockUnit })}
           </p>
         </div>
         <Stepper

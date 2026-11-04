@@ -7,6 +7,7 @@ import { getDictionary } from "@/lib/i18n";
 import { PAGE_SIZE, parsePage } from "@/lib/pagination";
 import { ChevronIcon, PeopleIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
+import { PageHelp } from "@/components/page-help";
 import { Empty, Page, PageHeader } from "@/components/ui/page";
 import { Pagination } from "@/components/ui/pagination";
 import { SearchBox } from "@/components/ui/search-box";
@@ -50,6 +51,7 @@ export default async function CustomersPage({
     <Page>
       <PageHeader
         title={dict.customers.title}
+        help={<PageHelp topic="customers" dict={dict} />}
         actions={<CustomerButton dict={dict} />}
       />
 

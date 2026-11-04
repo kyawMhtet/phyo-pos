@@ -10,7 +10,7 @@ export function BottomNav({
   labels: { dashboard: string; sell: string; orders: string; products: string; more: string };
 }) {
   const pathname = usePathname();
-  const moreRoutes = ["/more", "/customers", "/expenses", "/reports"];
+  const moreRoutes = ["/more", "/customers", "/expenses", "/reports", "/help"];
 
   const items = [
     { href: "/", label: labels.dashboard, Icon: HomeIcon, active: pathname === "/" },

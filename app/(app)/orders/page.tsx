@@ -10,6 +10,7 @@ import { PAGE_SIZE, parsePage } from "@/lib/pagination";
 import { BagIcon, ChevronIcon, TagIcon } from "@/components/icons";
 import { buttonClass } from "@/components/ui/button";
 import { PaymentBadge, StatusBadge } from "@/components/ui/order-badges";
+import { PageHelp } from "@/components/page-help";
 import { Empty, FilterTabs, Page, PageHeader } from "@/components/ui/page";
 import { Pagination } from "@/components/ui/pagination";
 import { SearchBox } from "@/components/ui/search-box";
@@ -99,6 +100,7 @@ export default async function OrdersPage({
     <Page wide>
       <PageHeader
         title={dict.orders.title}
+        help={<PageHelp topic="orders" dict={dict} />}
         actions={
           <Link href="/sell" className={buttonClass()}>
             <TagIcon className="h-4 w-4" />

@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/money";
-import { stockLevel, type ProductLine, type Size } from "@/lib/catalog";
+import { packsFrom, stockLevel, type ProductLine, type Size } from "@/lib/catalog";
+import { fill } from "@/lib/text";
 import type { Dictionary } from "@/lib/i18n";
 import { BoxIcon, ChevronIcon, SearchIcon, TagIcon, TrashIcon } from "@/components/icons";
 import { Button, buttonClass } from "@/components/ui/button";
@@ -21,10 +22,12 @@ export function Register({
   lines,
   customers,
   dict,
+  help,
 }: {
   lines: ProductLine[];
   customers: CustomerOption[];
   dict: Dictionary;
+  help: React.ReactNode;
 }) {
   const cart = useCart(lines);
   const [activeLineId, setActiveLineId] = useState<number | null>(null);
@@ -83,15 +86,18 @@ export function Register({
     <div className="flex w-full flex-1 lg:h-dvh lg:flex-none lg:overflow-hidden">
       <section className="flex min-w-0 flex-1 flex-col lg:overflow-y-auto">
         <div className="sticky top-0 z-10 space-y-2.5 border-b border-border bg-background/95 px-4 pt-3 pb-2.5 backdrop-blur lg:px-6 lg:pt-5">
-          <div className="relative">
-            <SearchIcon className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted" />
-            <Input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder={dict.sell.search}
-              className="pl-10"
-            />
+          <div className="flex gap-2">
+            <div className="relative min-w-0 flex-1">
+              <SearchIcon className="pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-muted" />
+              <Input
+                type="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={dict.sell.search}
+                className="pl-10"
+              />
+            </div>
+            {help}
           </div>
           <div className="scroll-none -mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:flex-wrap lg:px-0">
             <LineChip
@@ -262,6 +268,23 @@ function Tile({
   const free = size.stock - unitsInCart;
   const level = stockLevel(size.stock, line.lowStockAt);
   const soldOut = !size.packs.some((pack) => pack.unitsPerPack <= free);
+  const onlyPack = size.packs.length === 1 ? size.packs[0] : null;
+
+  function stockText() {
+    const stock = formatMoney(free);
+    const unit = line.stockUnit;
+    if (level === "out") return dict.sell.outOfStock;
+    if (soldOut && unitsInCart > 0) return dict.sell.allInCart;
+    if (soldOut) return fill(dict.sell.notEnoughForPack, { stock, unit });
+    if (onlyPack && onlyPack.unitsPerPack > 1) {
+      return fill(dict.sell.packsLeft, {
+        packs: packsFrom(free, onlyPack.unitsPerPack),
+        stock,
+        unit,
+      });
+    }
+    return fill(dict.sell.unitsLeft, { stock, unit });
+  }
 
   return (
     <button
@@ -288,12 +311,10 @@ function Tile({
 
       <span
         className={`money mt-1.5 border-t border-dashed border-border pt-1 text-xs font-medium ${
-          level === "out" ? "text-bad" : level === "low" ? "text-warn" : "text-muted"
+          level === "out" || soldOut ? "text-bad" : level === "low" ? "text-warn" : "text-muted"
         }`}
       >
-        {level === "out"
-          ? dict.sell.outOfStock
-          : `${formatMoney(size.stock)} ${line.stockUnit} ${dict.sell.left}`}
+        {stockText()}
       </span>
 
       {unitsInCart > 0 && (
@@ -361,6 +382,9 @@ function CartRow({ item, cart, dict }: { item: CartLine; cart: Cart; dict: Dicti
         />
         <span className="money font-semibold">{formatMoney(item.subtotal)}</span>
       </div>
+      {item.quantity >= item.maxQuantity && (
+        <p className="text-[13px] text-warn">{fill(dict.sell.atMax, { n: item.maxQuantity })}</p>
+      )}
     </li>
   );
 }

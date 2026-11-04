@@ -10,6 +10,7 @@ import { getDictionary } from "@/lib/i18n";
 import { BagIcon } from "@/components/icons";
 import { Card } from "@/components/ui/card";
 import { PaymentBadge, StatusBadge } from "@/components/ui/order-badges";
+import { PageHelp } from "@/components/page-help";
 import { Empty, Page, PageHeader, SectionTitle, Stat } from "@/components/ui/page";
 import { CustomerButton } from "../customer-sheet";
 
@@ -40,6 +41,7 @@ export default async function CustomerDetailPage({ params }: { params: Promise<{
     <Page>
       <PageHeader
         title={customer.name}
+        help={<PageHelp topic="customers" dict={dict} />}
         backHref="/customers"
         backLabel={dict.common.back}
         actions={<CustomerButton customer={customer} dict={dict} />}

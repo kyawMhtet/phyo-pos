@@ -6,6 +6,7 @@ import { getDictionary, type Dictionary } from "@/lib/i18n";
 import { BoxIcon, ChevronIcon, PlusIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
+import { PageHelp } from "@/components/page-help";
 import { Empty, Page, PageHeader, SectionTitle } from "@/components/ui/page";
 
 export default async function ProductsPage() {
@@ -20,6 +21,7 @@ export default async function ProductsPage() {
     <Page wide>
       <PageHeader
         title={dict.products.title}
+        help={<PageHelp topic="products" dict={dict} />}
         actions={
           <Link href="/products/new" className={buttonClass()}>
             <PlusIcon className="h-4 w-4" />

@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { PaymentBadge, StatusBadge } from "@/components/ui/order-badges";
+import { PageHelp } from "@/components/page-help";
 import { Page, PageHeader } from "@/components/ui/page";
 import { OrderActions } from "./order-actions";
 import { Voucher } from "./voucher";
@@ -52,6 +53,7 @@ export default async function OrderDetailPage({
         <Page>
           <PageHeader
             title={`${dict.orders.order} #${order.id}`}
+            help={<PageHelp topic="orderDetail" dict={dict} />}
             subtitle={formatDateTime(order.createdAt)}
             backHref="/orders"
             backLabel={dict.common.back}

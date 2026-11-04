@@ -6,11 +6,13 @@ import { stockAdjustments } from "@/lib/db/schema";
 import { getProductLines } from "@/lib/db/queries";
 import { formatMoney } from "@/lib/money";
 import { formatDateTime } from "@/lib/time";
-import { stockLevel } from "@/lib/catalog";
+import { packsFrom, stockLevel } from "@/lib/catalog";
+import { fill } from "@/lib/text";
 import { getDictionary } from "@/lib/i18n";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { PageHelp } from "@/components/page-help";
 import { Page, PageHeader, SectionTitle } from "@/components/ui/page";
 import { StockButton } from "./stock-sheet";
 
@@ -38,6 +40,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     <Page>
       <PageHeader
         title={line.name}
+        help={<PageHelp topic="productDetail" dict={dict} />}
         subtitle={line.options.length > 0 ? line.options.join(" · ") : undefined}
         backHref="/products"
         backLabel={dict.common.back}
@@ -77,7 +80,17 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   {size.packs.length === 0 && <p className="text-sm text-muted">—</p>}
                   {size.packs.map((pack) => (
                     <p key={pack.id} className="flex items-baseline justify-between gap-3 text-sm">
-                      <span className="text-muted">{pack.label}</span>
+                      <span className="text-muted">
+                        {pack.label}
+                        {pack.unitsPerPack > 1 && (
+                          <span className="money text-xs">
+                            {" · "}
+                            {fill(dict.sell.available, {
+                              n: packsFrom(size.stock, pack.unitsPerPack),
+                            })}
+                          </span>
+                        )}
+                      </span>
                       <span className="money">
                         <span className="font-semibold">{formatMoney(pack.price)}</span>
                         {pack.costPrice > 0 && (

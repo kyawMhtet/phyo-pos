@@ -9,6 +9,7 @@ import { stockLevel } from "@/lib/catalog";
 import { paymentState, paymentStateLabels, statusLabels } from "@/lib/orders";
 import { getDictionary } from "@/lib/i18n";
 import { BagIcon, CheckIcon, CoinIcon, TagIcon, TruckIcon, WarningIcon } from "@/components/icons";
+import { PageHelp } from "@/components/page-help";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -119,10 +120,13 @@ export default async function DashboardPage() {
           </h1>
           <p className="text-sm text-muted">{formatDate(new Date())}</p>
         </div>
-        <Link href="/sell" className={`${buttonClass()} lg:hidden`}>
-          <TagIcon className="h-4 w-4" />
-          {dict.dashboard.newSale}
-        </Link>
+        <div className="flex items-center gap-2">
+          <PageHelp topic="home" dict={dict} />
+          <Link href="/sell" className={`${buttonClass()} lg:hidden`}>
+            <TagIcon className="h-4 w-4" />
+            {dict.dashboard.newSale}
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-2xl bg-ink p-5 text-ink-foreground">

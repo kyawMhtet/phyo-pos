@@ -38,6 +38,11 @@ export function parseOptions(value: string | null): string[] {
     .filter(Boolean);
 }
 
+// How many of a pack this much stock covers.
+export function packsFrom(units: number, unitsPerPack: number): number {
+  return Math.max(Math.floor(units / unitsPerPack), 0);
+}
+
 // What gets snapshotted onto order_items.productName.
 export function sizeLabel(lineName: string, sizeName: string): string {
   return `${lineName} — ${sizeName}`;

@@ -200,3 +200,13 @@ export function WarningIcon({ className }: IconProps) {
     </svg>
   );
 }
+
+export function HelpIcon({ className }: IconProps) {
+  return (
+    <svg {...common} className={className}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M9.6 9.6a2.4 2.4 0 1 1 3.6 2.1c-.8.5-1.2 1-1.2 1.9" />
+      <path d="M12 16.6v.1" />
+    </svg>
+  );
+}

@@ -25,12 +25,14 @@ export function PageHeader({
   backHref,
   backLabel,
   actions,
+  help,
 }: {
   title: string;
   subtitle?: React.ReactNode;
   backHref?: string;
   backLabel?: string;
   actions?: React.ReactNode;
+  help?: React.ReactNode;
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
@@ -49,7 +51,12 @@ export function PageHeader({
           {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
         </div>
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {(actions || help) && (
+        <div className="flex items-center gap-2">
+          {help}
+          {actions}
+        </div>
+      )}
     </div>
   );
 }

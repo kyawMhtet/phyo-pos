@@ -19,6 +19,16 @@ export function FieldError({ message, className = "" }: { message?: string; clas
   );
 }
 
+export function Hint({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return <p className={`mt-1 text-[13px] text-muted ${className}`}>{children}</p>;
+}
+
 export function Input({
   error,
   ...props

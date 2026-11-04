@@ -7,6 +7,7 @@ import {
   BoxIcon,
   ChartIcon,
   CoinIcon,
+  HelpIcon,
   HomeIcon,
   PeopleIcon,
   TagIcon,
@@ -25,6 +26,7 @@ export function Sidebar({
     customers: string;
     expenses: string;
     reports: string;
+    help: string;
   };
   appName: string;
   footer: React.ReactNode;
@@ -38,6 +40,7 @@ export function Sidebar({
     { href: "/customers", label: labels.customers, Icon: PeopleIcon },
     { href: "/expenses", label: labels.expenses, Icon: CoinIcon },
     { href: "/reports", label: labels.reports, Icon: ChartIcon },
+    { href: "/help", label: labels.help, Icon: HelpIcon },
   ];
 
   return (

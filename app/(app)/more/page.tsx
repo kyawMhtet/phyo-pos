@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { logout } from "@/app/login/actions";
 import { getDictionary } from "@/lib/i18n";
-import { ChartIcon, ChevronIcon, CoinIcon, PeopleIcon } from "@/components/icons";
+import { ChartIcon, ChevronIcon, CoinIcon, HelpIcon, PeopleIcon } from "@/components/icons";
 import { LocaleToggle } from "@/components/locale-toggle";
 import { Button } from "@/components/ui/button";
 import { Page, PageHeader } from "@/components/ui/page";
@@ -13,6 +13,7 @@ export default async function MorePage() {
     { href: "/customers", label: dict.nav.customers, Icon: PeopleIcon },
     { href: "/expenses", label: dict.nav.expenses, Icon: CoinIcon },
     { href: "/reports", label: dict.nav.reports, Icon: ChartIcon },
+    { href: "/help", label: dict.nav.help, Icon: HelpIcon },
   ];
 
   return (

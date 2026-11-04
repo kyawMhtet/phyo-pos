@@ -3,6 +3,7 @@ import { getDb } from "@/lib/db/client";
 import { customers } from "@/lib/db/schema";
 import { getProductLines } from "@/lib/db/queries";
 import { getDictionary } from "@/lib/i18n";
+import { PageHelp } from "@/components/page-help";
 import { Register } from "./register";
 
 export default async function SellPage() {
@@ -27,5 +28,12 @@ export default async function SellPage() {
     }))
     .filter((line) => line.sizes.length > 0);
 
-  return <Register lines={sellableLines} customers={customerRows} dict={dict} />;
+  return (
+    <Register
+      lines={sellableLines}
+      customers={customerRows}
+      dict={dict}
+      help={<PageHelp topic="sell" dict={dict} />}
+    />
+  );
 }

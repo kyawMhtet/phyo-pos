@@ -5,6 +5,7 @@ import { formatMoney } from "@/lib/money";
 import { addDays, formatShortDate, startOfDay } from "@/lib/time";
 import { getDictionary } from "@/lib/i18n";
 import { ChartIcon } from "@/components/icons";
+import { PageHelp } from "@/components/page-help";
 import { Card } from "@/components/ui/card";
 import { DailyBars } from "@/components/ui/daily-bars";
 import { Empty, FilterTabs, Page, PageHeader, SectionTitle, Stat } from "@/components/ui/page";
@@ -109,7 +110,7 @@ export default async function ReportsPage({
 
   return (
     <Page>
-      <PageHeader title={dict.reports.title} />
+      <PageHeader title={dict.reports.title} help={<PageHelp topic="reports" dict={dict} />} />
 
       <FilterTabs
         tabs={ranges.map((r) => ({

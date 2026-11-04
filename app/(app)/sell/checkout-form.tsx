@@ -6,7 +6,7 @@ import { formatMoney } from "@/lib/money";
 import { PAYMENT_METHODS, paymentMethodLabels, type PaymentMethod } from "@/lib/orders";
 import type { Dictionary } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { Input, Label, NumberInput, Textarea } from "@/components/ui/input";
+import { Hint, Input, Label, NumberInput, Textarea } from "@/components/ui/input";
 import { Chips, Segmented } from "@/components/ui/segmented";
 import { useSubmit } from "@/components/ui/use-submit";
 import { createOrder } from "../orders/actions";
@@ -116,14 +116,17 @@ export function CheckoutForm({
 
   return (
     <div className="space-y-5">
-      <Segmented
-        value={fulfillment}
-        onChange={setFulfillment}
-        options={[
-          { value: "delivery", label: dict.checkout.delivery },
-          { value: "pickup", label: dict.checkout.pickup },
-        ]}
-      />
+      <div>
+        <Segmented
+          value={fulfillment}
+          onChange={setFulfillment}
+          options={[
+            { value: "delivery", label: dict.checkout.delivery },
+            { value: "pickup", label: dict.checkout.pickup },
+          ]}
+        />
+        <Hint>{isDelivery ? dict.checkout.deliveryHint : dict.checkout.pickupHint}</Hint>
+      </div>
 
       <div className="space-y-3">
         <div>
@@ -143,6 +146,7 @@ export function CheckoutForm({
               clearError("customerName");
             }}
           />
+          <Hint>{dict.checkout.customerHint}</Hint>
           {matches.length > 0 && (
             <ul className="mt-1 divide-y divide-border overflow-hidden rounded-xl border border-border">
               {matches.map((customer) => (
@@ -221,6 +225,15 @@ export function CheckoutForm({
               { value: "none", label: dict.checkout.unpaid },
             ]}
           />
+          <Hint>
+            {
+              {
+                full: dict.checkout.paidFullHint,
+                advance: dict.checkout.advanceHint,
+                none: dict.checkout.unpaidHint,
+              }[payment]
+            }
+          </Hint>
         </div>
         {payment === "advance" && (
           <div>
