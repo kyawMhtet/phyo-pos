@@ -1,24 +1,29 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Figtree, Noto_Sans_Myanmar } from "next/font/google";
+import localFont from "next/font/local";
 import { getLocale } from "@/lib/i18n";
 import "./globals.css";
 
-const displayFont = Bricolage_Grotesque({
+// Self-hosted: about 1 in 20 Google Fonts responses use URLs that Turbopack's
+// next/font/google can't parse, which fails the build at random.
+const displayFont = localFont({
+  src: "./fonts/bricolage-grotesque-latin.woff2",
   variable: "--font-display-raw",
-  weight: ["600", "700"],
-  subsets: ["latin"],
+  weight: "600 700",
+  display: "swap",
 });
 
-const bodyFont = Figtree({
+const bodyFont = localFont({
+  src: "./fonts/figtree-latin.woff2",
   variable: "--font-body-raw",
-  weight: ["400", "500", "600", "700"],
-  subsets: ["latin"],
+  weight: "300 900",
+  display: "swap",
 });
 
-const myanmarFont = Noto_Sans_Myanmar({
+const myanmarFont = localFont({
+  src: "./fonts/noto-sans-myanmar.woff2",
   variable: "--font-myanmar-raw",
-  weight: ["400", "500", "600", "700"],
-  subsets: ["myanmar", "latin"],
+  weight: "400 700",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
