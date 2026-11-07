@@ -33,7 +33,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           .orderBy(desc(stockAdjustments.createdAt), desc(stockAdjustments.id))
           .limit(20)
       : [];
-  const sizeName = new Map(line.sizes.map((size) => [size.id, size.name]));
+  const sizeById = new Map(line.sizes.map((size) => [size.id, size]));
   const activeSizes = line.sizes.filter((size) => size.isActive);
 
   return (
@@ -123,14 +123,18 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
               {history.map((entry) => (
                 <li key={entry.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
                   <div className="min-w-0">
-                    <p className="truncate font-medium">{sizeName.get(entry.productId)}</p>
+                    <p className="truncate font-medium">{sizeById.get(entry.productId)?.name}</p>
                     <p className="truncate text-xs text-muted">
                       {entry.reason} · {formatDateTime(entry.createdAt)}
                     </p>
                   </div>
                   <span className={`money shrink-0 font-semibold ${entry.change > 0 ? "text-good" : "text-bad"}`}>
-                    {entry.change > 0 ? "+" : ""}
-                    {formatMoney(entry.change)}
+                    {entry.change > 0 ? "+" : "-"}
+                    {stockAsPacks(
+                      Math.abs(entry.change),
+                      sizeById.get(entry.productId)?.packs ?? [],
+                      line.stockUnit
+                    )}
                   </span>
                 </li>
               ))}

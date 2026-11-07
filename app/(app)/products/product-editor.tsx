@@ -4,7 +4,13 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { hasErrors, type FieldErrors } from "@/lib/form";
 import { formatMoney } from "@/lib/money";
-import { COLOUR_PRESETS, packsFrom, parseOptions, type ProductLine } from "@/lib/catalog";
+import {
+  COLOUR_PRESETS,
+  parseOptions,
+  stockAsPacks,
+  stockPackSize,
+  type ProductLine,
+} from "@/lib/catalog";
 import { fill } from "@/lib/text";
 import type { Dictionary } from "@/lib/i18n";
 import { CloseIcon, EyeIcon, EyeOffIcon, PlusIcon, TrashIcon } from "@/components/icons";
@@ -28,6 +34,12 @@ type SizeRow = {
   supplierPack: number | null;
   cells: Record<string, Cell>;
 };
+
+// "100 pcs" -> 100, so a pack's size can follow what's typed as its name.
+function unitsInLabel(label: string): number | null {
+  const digits = label.trim().match(/^[\d,]+/)?.[0].replaceAll(",", "");
+  return Number(digits) || null;
+}
 
 const UNIT_SUGGESTIONS = ["pcs", "kg", "yard", "pack"];
 
@@ -121,14 +133,24 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
     );
   }
 
-  // "= 3 × 100 pcs": what the stock in this row adds up to in packs.
-  function coverage(row: SizeRow) {
-    return columns
-      .filter(
-        (column) => (column.units ?? 0) > 1 && column.label.trim() && row.cells[column.key]?.price
-      )
-      .map((column) => `${packsFrom(row.stock ?? 0, column.units ?? 1)} × ${column.label.trim()}`)
-      .join(" · ");
+  function renameColumn(column: PackColumn, label: string) {
+    const followsLabel = column.units === null || column.units === unitsInLabel(column.label);
+    updateColumn(column.key, followsLabel ? { label, units: unitsInLabel(label) } : { label });
+  }
+
+  // The packs this row sells, or every pack until it has prices.
+  function rowPacks(row: SizeRow) {
+    const named = columns.filter((column) => column.units && column.label.trim());
+    const priced = named.filter((column) => row.cells[column.key]?.price != null);
+    return (priced.length > 0 ? priced : named).map((column) => ({
+      label: column.label.trim(),
+      unitsPerPack: column.units ?? 1,
+    }));
+  }
+
+  // A new size's stock is typed in packs of this size.
+  function packSizeOf(row: SizeRow) {
+    return stockPackSize({ supplierPackSize: row.supplierPack, packs: rowPacks(row) });
   }
 
   // The grid's row and column keys only exist here, so it's checked before sending.
@@ -184,7 +206,7 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
             name: row.name,
             note: row.note,
             isActive: row.isActive,
-            openingStock: row.id ? 0 : (row.stock ?? 0),
+            openingStock: row.id ? 0 : (row.stock ?? 0) * packSizeOf(row),
             supplierPackSize: row.supplierPack || null,
             packs: columns.flatMap((column) => {
               const cell = row.cells[column.key];
@@ -296,14 +318,14 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
                     placeholder={t.packLabelPlaceholder}
                     aria-invalid={fieldErrors[`label-${column.key}`] ? true : undefined}
                     onChange={(e) => {
-                      updateColumn(column.key, { label: e.target.value });
+                      renameColumn(column, e.target.value);
                       clearError(`label-${column.key}`);
                     }}
                   />
                 </div>
                 <div className="w-36 shrink-0 sm:w-48">
                   <Label htmlFor={`units-${column.key}`}>
-                    {t.packUnits} ({stockUnit})
+                    {fill(t.packUnits, { unit: stockUnit })}
                   </Label>
                   <NumberInput
                     id={`units-${column.key}`}
@@ -358,7 +380,6 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
         <div>
           <SectionTitle>{t.sizesTitle}</SectionTitle>
           <p className="text-sm text-muted">{t.sizesHint}</p>
-          <p className="mt-1 text-sm font-medium">{fill(t.stockCountHint, { unit: stockUnit })}</p>
         </div>
 
         <div className="space-y-2">
@@ -449,27 +470,6 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
                     </div>
                   );
                 })}
-                {row.id ? (
-                  <div className="col-span-2 self-end text-sm text-muted sm:col-span-1 sm:pb-2.5">
-                    {dict.products.stock}:{" "}
-                    <span className="money font-semibold text-foreground">
-                      {formatMoney(row.stock ?? 0)} {stockUnit}
-                    </span>
-                    {coverage(row) && <span className="money block text-xs">= {coverage(row)}</span>}
-                  </div>
-                ) : (
-                  <div>
-                    <Label htmlFor={`stock-${row.key}`}>
-                      {t.openingStock} ({stockUnit})
-                    </Label>
-                    <NumberInput
-                      id={`stock-${row.key}`}
-                      value={row.stock}
-                      onValueChange={(stock) => updateRow(row.key, { stock })}
-                    />
-                    {coverage(row) && <Hint className="money">= {coverage(row)}</Hint>}
-                  </div>
-                )}
                 <div className="col-span-2">
                   <Label htmlFor={`supplier-${row.key}`}>
                     {fill(t.supplierPack, { unit: stockUnit })} ({dict.common.optional})
@@ -480,6 +480,36 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
                     onValueChange={(supplierPack) => updateRow(row.key, { supplierPack })}
                   />
                 </div>
+                {row.id ? (
+                  <div className="col-span-2 text-sm text-muted">
+                    {dict.products.stock}:{" "}
+                    <span className="money font-semibold text-foreground">
+                      {stockAsPacks(row.stock ?? 0, rowPacks(row), stockUnit)}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="col-span-2">
+                    <Label htmlFor={`stock-${row.key}`}>
+                      {packSizeOf(row) > 1 ? t.openingPacks : `${t.openingStock} (${stockUnit})`}
+                    </Label>
+                    <NumberInput
+                      id={`stock-${row.key}`}
+                      value={row.stock}
+                      onValueChange={(stock) => updateRow(row.key, { stock })}
+                    />
+                    {packSizeOf(row) > 1 && (
+                      <Hint className="money">
+                        {fill(dict.stock.packSizeNote, {
+                          size: formatMoney(packSizeOf(row)),
+                          unit: stockUnit,
+                        })}
+                        {row.stock
+                          ? ` → ${stockAsPacks(row.stock * packSizeOf(row), rowPacks(row), stockUnit)}`
+                          : ""}
+                      </Hint>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           ))}

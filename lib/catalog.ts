@@ -8,6 +8,8 @@ export type Pack = {
   costPrice: number;
 };
 
+type PackSize = Pick<Pack, "label" | "unitsPerPack">;
+
 export type Size = {
   id: number;
   name: string;
@@ -57,9 +59,14 @@ export function packsFrom(units: number, unitsPerPack: number): number {
   return Math.max(Math.floor(units / unitsPerPack), 0);
 }
 
+// The pack stock is entered in: the supplier's if it's set, else the biggest one sold.
+export function stockPackSize(size: { supplierPackSize: number | null; packs: PackSize[] }): number {
+  return size.supplierPackSize || Math.max(1, ...size.packs.map((pack) => pack.unitsPerPack));
+}
+
 // Stock the way people think of it: "18 × 100 + 1 × 50", biggest pack first, then
 // whatever is too few for a pack. Sizes sold singly just show the count.
-export function stockAsPacks(units: number, packs: Pack[], unit: string): string {
+export function stockAsPacks(units: number, packs: PackSize[], unit: string): string {
   const sorted = packs
     .filter((pack) => pack.unitsPerPack > 1)
     .sort((a, b) => b.unitsPerPack - a.unitsPerPack);

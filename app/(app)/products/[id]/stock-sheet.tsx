@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
-import { packsFrom, type ProductLine } from "@/lib/catalog";
+import { stockAsPacks, stockPackSize, type ProductLine } from "@/lib/catalog";
 import { fill } from "@/lib/text";
 import type { Dictionary } from "@/lib/i18n";
 import { BoxIcon } from "@/components/icons";
@@ -45,21 +45,19 @@ function StockForm({
   onDone: () => void;
 }) {
   const [mode, setMode] = useState<AdjustStockInput["mode"]>("receive");
-  const [entry, setEntry] = useState<"units" | "supplier">(
-    line.sizes.some((size) => size.isActive && size.supplierPackSize) ? "supplier" : "units"
-  );
+  const [entry, setEntry] = useState<"packs" | "units">("packs");
   const [amounts, setAmounts] = useState<Record<number, number | null>>({});
   const [note, setNote] = useState("");
   const { pending, fieldErrors, submit, clearError } = useSubmit(dict.common.errorGeneric);
 
   const sizes = line.sizes.filter((size) => size.isActive);
   const entered = sizes.filter((size) => (amounts[size.id] ?? null) !== null);
-  const hasSupplierPacks = sizes.some((size) => size.supplierPackSize);
-  const inSupplierPacks = hasSupplierPacks && entry === "supplier";
+  const hasPacks = sizes.some((size) => stockPackSize(size) > 1);
+  const inPacks = hasPacks && entry === "packs";
 
-  // What's typed for a size, in stock units. Sizes with no supplier pack stay in units.
+  // What's typed for a size, in stock units.
   function unitsFor(size: ProductLine["sizes"][number], amount: number) {
-    return inSupplierPacks ? amount * (size.supplierPackSize ?? 1) : amount;
+    return inPacks ? amount * stockPackSize(size) : amount;
   }
 
   const packGuide = [
@@ -78,13 +76,6 @@ function StockForm({
     ),
   ];
 
-  function coverage(stock: number, packs: ProductLine["sizes"][number]["packs"]) {
-    return packs
-      .filter((pack) => pack.unitsPerPack > 1)
-      .map((pack) => `${packsFrom(stock, pack.unitsPerPack)} × ${pack.label}`)
-      .join(" · ");
-  }
-
   function resultFor(stock: number, amount: number) {
     if (mode === "receive") return stock + amount;
     if (mode === "remove") return stock - amount;
@@ -102,15 +93,15 @@ function StockForm({
           { value: "count", label: dict.stock.modeCount },
         ]}
       />
-      {hasSupplierPacks && (
+      {hasPacks && (
         <div>
           <Label>{dict.stock.enterIn}</Label>
           <Segmented
             value={entry}
             onChange={setEntry}
             options={[
+              { value: "packs", label: dict.stock.packs },
               { value: "units", label: line.stockUnit },
-              { value: "supplier", label: dict.stock.supplierPacks },
             ]}
           />
         </div>
@@ -123,12 +114,12 @@ function StockForm({
               remove: dict.stock.hintRemove,
               count: dict.stock.hintCount,
             }[mode],
-            { unit: inSupplierPacks ? dict.stock.supplierPacks : line.stockUnit }
+            { unit: inPacks ? dict.stock.packs : line.stockUnit }
           )}
         </p>
-        {inSupplierPacks ? (
+        {inPacks ? (
           <p className="mt-1 rounded-lg bg-sunken px-3 py-2 font-medium text-foreground">
-            {fill(dict.stock.supplierHint, { unit: line.stockUnit })}
+            {fill(dict.stock.packsHint, { unit: line.stockUnit })}
           </p>
         ) : (
           packGuide.length > 0 && (
@@ -145,37 +136,27 @@ function StockForm({
           const amount = amounts[size.id] ?? null;
           const units = amount === null ? null : unitsFor(size, amount);
           const result = units === null ? null : resultFor(size.stock, units);
+          const packSize = stockPackSize(size);
           return (
             <li key={size.id} className="py-2">
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-medium">{size.name}</p>
                   <p className="money text-xs text-muted">
-                    {formatMoney(size.stock)}
+                    {stockAsPacks(size.stock, size.packs, line.stockUnit)}
                     {result !== null && (
                       <span className={result < 0 ? "text-bad" : "text-foreground"}>
                         {" → "}
-                        {formatMoney(result)}
+                        {result < 0
+                          ? `${formatMoney(result)} ${line.stockUnit}`
+                          : stockAsPacks(result, size.packs, line.stockUnit)}
                       </span>
-                    )}{" "}
-                    {line.stockUnit}
+                    )}
                   </p>
-                  {coverage(result ?? size.stock, size.packs) && (
-                    <p className="money truncate text-xs text-muted">
-                      = {coverage(Math.max(result ?? size.stock, 0), size.packs)}
-                    </p>
-                  )}
-                  {inSupplierPacks && !size.supplierPackSize && (
-                    <p className="text-xs text-muted">
-                      {fill(dict.stock.noSupplierPack, { unit: line.stockUnit })}
-                    </p>
-                  )}
-                  {inSupplierPacks && size.supplierPackSize && amount !== null && (
-                    <p className="money text-xs font-medium text-foreground">
-                      {fill(dict.stock.supplierMath, {
-                        packs: formatMoney(amount),
-                        size: formatMoney(size.supplierPackSize),
-                        units: formatMoney(units ?? 0),
+                  {inPacks && packSize > 1 && (
+                    <p className="money text-xs text-muted">
+                      {fill(dict.stock.packSizeNote, {
+                        size: formatMoney(packSize),
                         unit: line.stockUnit,
                       })}
                     </p>
