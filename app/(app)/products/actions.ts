@@ -23,6 +23,7 @@ const lineSchema = z.object({
         note: z.string().trim(),
         isActive: z.boolean(),
         openingStock: z.number().int().min(0),
+        supplierPackSize: z.number().int().positive().nullable(),
         packs: z.array(
           z.object({
             id: z.number().int().positive().optional(),
@@ -95,6 +96,7 @@ export async function saveProductLine(
       const values = {
         name: size.name,
         variant: size.note || null,
+        supplierPackSize: size.supplierPackSize,
         isActive: size.isActive,
         sortOrder: index,
         price: firstPack?.price ?? 0,

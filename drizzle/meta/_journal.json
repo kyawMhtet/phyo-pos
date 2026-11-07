@@ -15,6 +15,13 @@
       "when": 1793760978540,
       "tag": "0001_hesitant_slapstick",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1794045303888,
+      "tag": "0002_keen_lady_vermin",
+      "breakpoints": true
     }
   ]
 }

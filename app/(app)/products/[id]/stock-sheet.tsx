@@ -45,12 +45,20 @@ function StockForm({
   onDone: () => void;
 }) {
   const [mode, setMode] = useState<AdjustStockInput["mode"]>("receive");
+  const [entry, setEntry] = useState<"units" | "supplier">("units");
   const [amounts, setAmounts] = useState<Record<number, number | null>>({});
   const [note, setNote] = useState("");
   const { pending, fieldErrors, submit, clearError } = useSubmit(dict.common.errorGeneric);
 
   const sizes = line.sizes.filter((size) => size.isActive);
   const entered = sizes.filter((size) => (amounts[size.id] ?? null) !== null);
+  const hasSupplierPacks = sizes.some((size) => size.supplierPackSize);
+  const inSupplierPacks = hasSupplierPacks && entry === "supplier";
+
+  // What's typed for a size, in stock units. Sizes with no supplier pack stay in units.
+  function unitsFor(size: ProductLine["sizes"][number], amount: number) {
+    return inSupplierPacks ? amount * (size.supplierPackSize ?? 1) : amount;
+  }
 
   const packGuide = [
     ...new Set(
@@ -92,6 +100,19 @@ function StockForm({
           { value: "count", label: dict.stock.modeCount },
         ]}
       />
+      {hasSupplierPacks && (
+        <div>
+          <Label>{dict.stock.enterIn}</Label>
+          <Segmented
+            value={entry}
+            onChange={setEntry}
+            options={[
+              { value: "units", label: line.stockUnit },
+              { value: "supplier", label: dict.stock.supplierPacks },
+            ]}
+          />
+        </div>
+      )}
       <div className="text-sm text-muted">
         <p>
           {fill(
@@ -100,21 +121,28 @@ function StockForm({
               remove: dict.stock.hintRemove,
               count: dict.stock.hintCount,
             }[mode],
-            { unit: line.stockUnit }
+            { unit: inSupplierPacks ? dict.stock.supplierPacks : line.stockUnit }
           )}
         </p>
-        {packGuide.length > 0 && (
+        {inSupplierPacks ? (
           <p className="mt-1 rounded-lg bg-sunken px-3 py-2 font-medium text-foreground">
-            {fill(dict.stock.unitWarning, { unit: line.stockUnit })}{" "}
-            <span className="font-normal text-muted">{packGuide.join(" · ")}</span>
+            {fill(dict.stock.supplierHint, { unit: line.stockUnit })}
           </p>
+        ) : (
+          packGuide.length > 0 && (
+            <p className="mt-1 rounded-lg bg-sunken px-3 py-2 font-medium text-foreground">
+              {fill(dict.stock.unitWarning, { unit: line.stockUnit })}{" "}
+              <span className="font-normal text-muted">{packGuide.join(" · ")}</span>
+            </p>
+          )
         )}
       </div>
 
       <ul className="divide-y divide-border">
         {sizes.map((size) => {
           const amount = amounts[size.id] ?? null;
-          const result = amount === null ? null : resultFor(size.stock, amount);
+          const units = amount === null ? null : unitsFor(size, amount);
+          const result = units === null ? null : resultFor(size.stock, units);
           return (
             <li key={size.id} className="py-2">
               <div className="flex items-center justify-between gap-3">
@@ -133,6 +161,21 @@ function StockForm({
                   {coverage(result ?? size.stock, size.packs) && (
                     <p className="money truncate text-xs text-muted">
                       = {coverage(Math.max(result ?? size.stock, 0), size.packs)}
+                    </p>
+                  )}
+                  {inSupplierPacks && !size.supplierPackSize && (
+                    <p className="text-xs text-muted">
+                      {fill(dict.stock.noSupplierPack, { unit: line.stockUnit })}
+                    </p>
+                  )}
+                  {inSupplierPacks && size.supplierPackSize && amount !== null && (
+                    <p className="money text-xs font-medium text-foreground">
+                      {fill(dict.stock.supplierMath, {
+                        packs: formatMoney(amount),
+                        size: formatMoney(size.supplierPackSize),
+                        units: formatMoney(units ?? 0),
+                        unit: line.stockUnit,
+                      })}
                     </p>
                   )}
                 </div>
@@ -180,7 +223,7 @@ function StockForm({
                 note,
                 lines: entered.map((size) => ({
                   productId: size.id,
-                  amount: amounts[size.id] ?? 0,
+                  amount: unitsFor(size, amounts[size.id] ?? 0),
                 })),
               }),
             onDone

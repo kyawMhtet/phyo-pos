@@ -8,7 +8,7 @@ import { formatMoney } from "@/lib/money";
 import { formatDateTime } from "@/lib/time";
 import { packsFrom, stockLevel } from "@/lib/catalog";
 import { fill } from "@/lib/text";
-import { getDictionary } from "@/lib/i18n";
+import { getDictionary, type Dictionary } from "@/lib/i18n";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -69,6 +69,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   <div>
                     <p className="font-display font-semibold tracking-tight">{size.name}</p>
                     {size.note && <p className="text-xs text-muted">{size.note}</p>}
+                    {size.supplierPackSize && (
+                      <p className="money text-xs text-muted">
+                        {supplierPacksText(size.stock, size.supplierPackSize, line.stockUnit, dict)}
+                      </p>
+                    )}
                   </div>
                   <StockBadge
                     className="sm:hidden"
@@ -139,6 +144,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       )}
     </Page>
   );
+}
+
+// "92 packs + 10 pcs": the stock as it sits on the shelf, with one pack opened.
+function supplierPacksText(stock: number, packSize: number, unit: string, dict: Dictionary) {
+  const packs = formatMoney(packsFrom(stock, packSize));
+  const rest = stock > 0 ? stock % packSize : 0;
+  return rest > 0
+    ? fill(dict.stock.inPacksLoose, { packs, rest: formatMoney(rest), unit })
+    : fill(dict.stock.inPacks, { packs });
 }
 
 function StockBadge({

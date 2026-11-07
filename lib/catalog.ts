@@ -11,6 +11,7 @@ export type Size = {
   name: string;
   note: string | null;
   stock: number;
+  supplierPackSize: number | null;
   isActive: boolean;
   packs: Pack[];
 };

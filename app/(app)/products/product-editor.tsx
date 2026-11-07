@@ -24,6 +24,7 @@ type SizeRow = {
   note: string;
   isActive: boolean;
   stock: number | null;
+  supplierPack: number | null;
   cells: Record<string, Cell>;
 };
 
@@ -57,6 +58,7 @@ function initialState(line?: ProductLine) {
     note: size.note ?? "",
     isActive: size.isActive,
     stock: size.stock,
+    supplierPack: size.supplierPackSize,
     cells: Object.fromEntries(
       size.packs.map((pack) => [
         columnKey(pack.label, pack.unitsPerPack),
@@ -88,7 +90,7 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
   );
 
   function blankRow(key: string): SizeRow {
-    return { key, name: "", note: "", isActive: true, stock: null, cells: {} };
+    return { key, name: "", note: "", isActive: true, stock: null, supplierPack: null, cells: {} };
   }
 
   function updateColumn(key: string, patch: Partial<PackColumn>) {
@@ -173,6 +175,7 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
             note: row.note,
             isActive: row.isActive,
             openingStock: row.id ? 0 : (row.stock ?? 0),
+            supplierPackSize: row.supplierPack || null,
             packs: columns.flatMap((column) => {
               const cell = row.cells[column.key];
               if (!cell || cell.price === null) return [];
@@ -450,6 +453,16 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
                     {coverage(row) && <Hint className="money">= {coverage(row)}</Hint>}
                   </div>
                 )}
+                <div className="col-span-2">
+                  <Label htmlFor={`supplier-${row.key}`}>
+                    {fill(t.supplierPack, { unit: stockUnit })} ({dict.common.optional})
+                  </Label>
+                  <NumberInput
+                    id={`supplier-${row.key}`}
+                    value={row.supplierPack}
+                    onValueChange={(supplierPack) => updateRow(row.key, { supplierPack })}
+                  />
+                </div>
               </div>
             </div>
           ))}

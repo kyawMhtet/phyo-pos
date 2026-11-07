@@ -27,6 +27,9 @@ export const products = sqliteTable("products", {
   price: integer("price").notNull(),
   costPrice: integer("cost_price").notNull().default(0),
   stock: integer("stock").notNull().default(0),
+  // How many stock units one pack from the supplier holds. Only for entering and
+  // showing stock; selling always goes through product_packs.
+  supplierPackSize: integer("supplier_pack_size"),
   isActive: integer("is_active", { mode: "boolean" }).notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),
   createdAt: integer("created_at", { mode: "timestamp" })

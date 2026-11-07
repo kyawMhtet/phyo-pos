@@ -34,6 +34,7 @@ export async function getProductLines(): Promise<ProductLine[]> {
       name: size.name,
       note: size.variant,
       stock: size.stock,
+      supplierPackSize: size.supplierPackSize,
       isActive: size.isActive,
       packs: packsBySize.get(size.id) ?? [],
     });

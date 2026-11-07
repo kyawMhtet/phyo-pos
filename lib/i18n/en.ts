@@ -136,6 +136,7 @@ export const en = {
     sizeName: "Size",
     sizeNamePlaceholder: "e.g. 15 x 25 cm",
     sizeNote: "Note",
+    supplierPack: "{unit} in a supplier pack",
     sellPrice: "Sell",
     costPrice: "Cost",
     openingStock: "Stock now",
@@ -161,6 +162,13 @@ export const en = {
     hintCount: "Type how many {unit} you counted on the shelf. This replaces the stock.",
     unitWarning: "Enter {unit}, not packs.",
     packTakes: "{label} takes {units} {unit}",
+    enterIn: "Enter in",
+    supplierPacks: "supplier packs",
+    supplierHint: "Enter whole supplier packs. They're saved as {unit}.",
+    supplierMath: "{packs} packs × {size} = {units} {unit}",
+    noSupplierPack: "No supplier pack set. Enter {unit}.",
+    inPacks: "{packs} packs",
+    inPacksLoose: "{packs} packs + {rest} {unit}",
     note: "Note",
     notePlaceholder: "e.g. supplier, reason",
     history: "Stock history",
@@ -374,6 +382,7 @@ export const en = {
           "Leave a price empty if that size isn't sold that way.",
           "“Edit” doesn't change stock. Use “Update stock” for that.",
           "The eye icon hides a size from sale without losing its history.",
+          "“pcs in a supplier pack” is optional: how many come in one pack from the supplier. “Update stock” can then take whole packs.",
         ],
       },
       productDetail: {
@@ -389,6 +398,7 @@ export const en = {
         tips: [
           "“Stock history” lists every stock change except normal sales.",
           "Sales take stock off by themselves, so don't remove it by hand.",
+          "If a size has a supplier pack set, choose “supplier packs” in “Update stock” and type whole packs: 100 packs of 20 adds 2,000.",
         ],
       },
       customers: {
