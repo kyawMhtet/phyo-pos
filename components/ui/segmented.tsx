@@ -33,6 +33,14 @@ export function Segmented<T extends string>({
   );
 }
 
+function chipClass(selected: boolean) {
+  return `min-h-10 cursor-pointer rounded-full border px-3.5 text-sm font-medium transition-colors ${
+    selected
+      ? "border-accent bg-accent text-accent-foreground"
+      : "border-border bg-surface text-foreground hover:border-accent"
+  }`;
+}
+
 export function Chips<T extends string>({
   value,
   onChange,
@@ -51,13 +59,36 @@ export function Chips<T extends string>({
           role="radio"
           aria-checked={value === option.value}
           onClick={() => onChange(option.value)}
-          className={`min-h-10 cursor-pointer rounded-full border px-3.5 text-sm font-medium transition-colors ${
-            value === option.value
-              ? "border-accent bg-accent text-accent-foreground"
-              : "border-border bg-surface text-foreground hover:border-accent"
-          }`}
+          className={chipClass(value === option.value)}
         >
           {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Chips where any number can be on at once.
+export function ToggleChips({
+  values,
+  onToggle,
+  options,
+}: {
+  values: string[];
+  onToggle: (value: string) => void;
+  options: string[];
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((option) => (
+        <button
+          key={option}
+          type="button"
+          aria-pressed={values.includes(option)}
+          onClick={() => onToggle(option)}
+          className={chipClass(values.includes(option))}
+        >
+          {option}
         </button>
       ))}
     </div>

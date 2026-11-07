@@ -1,6 +1,6 @@
 import type { Dictionary } from "@/lib/i18n";
 
-export const PAYMENT_METHODS = ["cash", "kpay", "wave", "transfer", "other"] as const;
+export const PAYMENT_METHODS = ["cash", "kpay", "wave", "ayapay", "transfer", "other"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
 export type OrderStatus = "pending" | "packed" | "delivered" | "cancelled";
@@ -33,6 +33,7 @@ export function paymentMethodLabels(dict: Dictionary): Record<PaymentMethod, str
     cash: dict.orders.cash,
     kpay: dict.orders.kpay,
     wave: dict.orders.wave,
+    ayapay: dict.orders.ayapay,
     transfer: dict.orders.transfer,
     other: dict.orders.other,
   };

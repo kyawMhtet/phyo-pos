@@ -27,6 +27,17 @@ export type ProductLine = {
   sizes: Size[];
 };
 
+// The colours bags come in, offered as chips when setting up a product.
+export const COLOUR_PRESETS = [
+  "ခဲဖြူ",
+  "လိမ္မော်",
+  "အသား",
+  "ပြာနု",
+  "ပန်းဆီ",
+  "ပန်းနု",
+  "ကြေးဉစိမ်း",
+];
+
 export type StockLevel = "out" | "low" | "ok";
 
 export function stockLevel(stock: number, lowStockAt: number): StockLevel {

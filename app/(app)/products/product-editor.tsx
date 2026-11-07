@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { hasErrors, type FieldErrors } from "@/lib/form";
 import { formatMoney } from "@/lib/money";
-import { packsFrom, type ProductLine } from "@/lib/catalog";
+import { COLOUR_PRESETS, packsFrom, parseOptions, type ProductLine } from "@/lib/catalog";
 import { fill } from "@/lib/text";
 import type { Dictionary } from "@/lib/i18n";
 import { CloseIcon, EyeIcon, EyeOffIcon, PlusIcon, TrashIcon } from "@/components/icons";
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FieldError, Hint, Input, Label, NumberInput } from "@/components/ui/input";
 import { SectionTitle } from "@/components/ui/page";
+import { ToggleChips } from "@/components/ui/segmented";
 import { useSubmit } from "@/components/ui/use-submit";
 import { saveProductLine } from "./actions";
 
@@ -91,6 +92,15 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
 
   function blankRow(key: string): SizeRow {
     return { key, name: "", note: "", isActive: true, stock: null, supplierPack: null, cells: {} };
+  }
+
+  function toggleColour(colour: string) {
+    setOptions((current) => {
+      const picked = parseOptions(current);
+      return (
+        picked.includes(colour) ? picked.filter((c) => c !== colour) : [...picked, colour]
+      ).join(", ");
+    });
   }
 
   function updateColumn(key: string, patch: Partial<PackColumn>) {
@@ -216,6 +226,13 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
           <Label htmlFor="options">
             {t.options} ({dict.common.optional})
           </Label>
+          <div className="mb-2">
+            <ToggleChips
+              values={parseOptions(options)}
+              onToggle={toggleColour}
+              options={COLOUR_PRESETS}
+            />
+          </div>
           <Input
             id="options"
             value={options}

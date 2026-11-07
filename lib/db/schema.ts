@@ -77,7 +77,7 @@ export const orders = sqliteTable("orders", {
     .notNull()
     .default("delivery"),
   paymentMethod: text("payment_method", {
-    enum: ["cash", "kpay", "wave", "transfer", "other"],
+    enum: ["cash", "kpay", "wave", "ayapay", "transfer", "other"],
   })
     .notNull()
     .default("cash"),
