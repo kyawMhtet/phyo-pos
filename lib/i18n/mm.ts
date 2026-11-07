@@ -127,7 +127,7 @@ export const mm: Dictionary = {
     packExample3: "တစ်ခုချင်း - ရောင်းပုံ \"1 pc\"၊ တစ်ထုပ်ရှိ 1",
     packPreview: "\"{label}\" တစ်ခု ရောင်းတိုင်း ကုန်လက်ကျန်မှ {units} {unit} နုတ်မည်။",
     packLabel: "ရောင်းပုံ",
-    packLabelPlaceholder: "ဥပမာ - 100 pcs",
+    packLabelPlaceholder: "ဥပမာ - 100",
     packUnits: "တစ်ထုပ်ရှိ {unit}",
     addPack: "ရောင်းပုံ ထပ်ထည့်ရန်",
     sizesTitle: "အရွယ်အစားနှင့် စျေးနှုန်း",

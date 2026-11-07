@@ -125,7 +125,7 @@ export const en = {
     packExample3: "One at a time: Sold as \"1 pc\", 1 in one pack",
     packPreview: "Each \"{label}\" sold takes {units} {unit} off the stock.",
     packLabel: "Sold as",
-    packLabelPlaceholder: "e.g. 100 pcs",
+    packLabelPlaceholder: "e.g. 100",
     packUnits: "{unit} in one pack",
     addPack: "Add another way to sell",
     sizesTitle: "Sizes and prices",

@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { getDb } from "@/lib/db/client";
 import { categories, customers, orderItems, orders, productPacks, products } from "@/lib/db/schema";
 import { getDictionary } from "@/lib/i18n";
-import { parseOptions, sizeLabel } from "@/lib/catalog";
+import { parseOptions, sizeLabel, stockAsPacks } from "@/lib/catalog";
 import { hasErrors, type FieldErrors, type FormResult } from "@/lib/form";
 import { formatMoney } from "@/lib/money";
 import { PAYMENT_METHODS } from "@/lib/orders";
@@ -187,8 +187,16 @@ export async function createOrder(input: OrderInput): Promise<OrderResult> {
           .returning({ id: products.id });
         if (updated.length === 0) {
           const pack = packRows.find((row) => row.productId === productId)!;
+          const [size] = await tx
+            .select({ stock: products.stock })
+            .from(products)
+            .where(eq(products.id, productId));
+          const packs = await tx
+            .select({ label: productPacks.label, unitsPerPack: productPacks.unitsPerPack })
+            .from(productPacks)
+            .where(eq(productPacks.productId, productId));
           throw new OutOfStockError(
-            `${dict.orders.errorNotEnoughStock}: ${sizeLabel(pack.lineName, pack.sizeName)} (${pack.stock} ${pack.stockUnit})`
+            `${dict.orders.errorNotEnoughStock}: ${sizeLabel(pack.lineName, pack.sizeName)} (${stockAsPacks(size.stock, packs, pack.stockUnit)})`
           );
         }
       }
