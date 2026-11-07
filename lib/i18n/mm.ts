@@ -140,6 +140,7 @@ export const mm: Dictionary = {
     costPrice: "ဝယ်စျေး",
     openingStock: "လက်ရှိ ကုန်လက်ကျန်",
     openingPacks: "လက်ရှိ ထုပ်အရေအတွက်",
+    fillPackFirst: "“ရောင်းပုံ” ကို အရင် ဖြည့်ပါ။",
     addSize: "အရွယ်အစား ထည့်ရန်",
     hideSize: "ရောင်းရန် ဖျောက်မည်",
     showSize: "ရောင်းရန် ပြမည်",

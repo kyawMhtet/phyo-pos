@@ -148,6 +148,11 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
     }));
   }
 
+  // Stock can't be typed until there's a pack to count it in.
+  function packKnown(row: SizeRow) {
+    return rowPacks(row).length > 0 || Boolean(row.supplierPack);
+  }
+
   // A new size's stock is typed in packs of this size.
   function packSizeOf(row: SizeRow) {
     return stockPackSize({ supplierPackSize: row.supplierPack, packs: rowPacks(row) });
@@ -490,13 +495,19 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
                 ) : (
                   <div className="col-span-2">
                     <Label htmlFor={`stock-${row.key}`}>
-                      {packSizeOf(row) > 1 ? t.openingPacks : `${t.openingStock} (${stockUnit})`}
+                      {packSizeOf(row) > 1
+                        ? t.openingPacks
+                        : packKnown(row)
+                          ? `${t.openingStock} (${stockUnit})`
+                          : t.openingStock}
                     </Label>
                     <NumberInput
                       id={`stock-${row.key}`}
                       value={row.stock}
+                      disabled={!packKnown(row)}
                       onValueChange={(stock) => updateRow(row.key, { stock })}
                     />
+                    {!packKnown(row) && <Hint>{t.fillPackFirst}</Hint>}
                     {packSizeOf(row) > 1 && (
                       <Hint className="money">
                         {fill(dict.stock.packSizeNote, {

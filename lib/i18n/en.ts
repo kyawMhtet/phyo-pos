@@ -138,6 +138,7 @@ export const en = {
     costPrice: "Cost",
     openingStock: "Stock now",
     openingPacks: "Packs in stock",
+    fillPackFirst: "Fill in “Sold as” first.",
     addSize: "Add size",
     hideSize: "Hide from sale",
     showSize: "Show for sale",
