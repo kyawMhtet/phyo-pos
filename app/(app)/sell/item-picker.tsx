@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { formatMoney } from "@/lib/money";
-import { packsFrom, type ProductLine, type Size } from "@/lib/catalog";
+import { packsFrom, stockAsPacks, type ProductLine, type Size } from "@/lib/catalog";
 import { fill } from "@/lib/text";
 import type { Dictionary } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
@@ -84,14 +84,9 @@ export function ItemPicker({
         <div>
           <p className="text-sm font-medium text-muted">{dict.sell.quantity}</p>
           <p className="money text-[13px] text-muted">
-            {pack.unitsPerPack > 1
-              ? fill(dict.sell.maxExplain, {
-                  n: maxQuantity,
-                  stock: formatMoney(freeUnits),
-                  unit: line.stockUnit,
-                  units: pack.unitsPerPack,
-                })
-              : fill(dict.sell.unitsLeft, { stock: formatMoney(freeUnits), unit: line.stockUnit })}
+            {fill(dict.sell.stockLeft, {
+              stock: stockAsPacks(freeUnits, size.packs, line.stockUnit),
+            })}
           </p>
         </div>
         <Stepper

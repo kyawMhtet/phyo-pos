@@ -45,7 +45,9 @@ function StockForm({
   onDone: () => void;
 }) {
   const [mode, setMode] = useState<AdjustStockInput["mode"]>("receive");
-  const [entry, setEntry] = useState<"units" | "supplier">("units");
+  const [entry, setEntry] = useState<"units" | "supplier">(
+    line.sizes.some((size) => size.isActive && size.supplierPackSize) ? "supplier" : "units"
+  );
   const [amounts, setAmounts] = useState<Record<number, number | null>>({});
   const [note, setNote] = useState("");
   const { pending, fieldErrors, submit, clearError } = useSubmit(dict.common.errorGeneric);

@@ -1,3 +1,5 @@
+import { formatMoney } from "@/lib/money";
+
 export type Pack = {
   id: number;
   label: string;
@@ -42,6 +44,26 @@ export function parseOptions(value: string | null): string[] {
 // How many of a pack this much stock covers.
 export function packsFrom(units: number, unitsPerPack: number): number {
   return Math.max(Math.floor(units / unitsPerPack), 0);
+}
+
+// Stock the way people think of it: "18 × 100 + 1 × 50", biggest pack first, then
+// whatever is too few for a pack. Sizes sold singly just show the count.
+export function stockAsPacks(units: number, packs: Pack[], unit: string): string {
+  const sorted = packs
+    .filter((pack) => pack.unitsPerPack > 1)
+    .sort((a, b) => b.unitsPerPack - a.unitsPerPack);
+  if (sorted.length === 0) return `${formatMoney(units)} ${unit}`;
+
+  const parts: string[] = [];
+  let rest = Math.max(units, 0);
+  for (const pack of sorted) {
+    const count = packsFrom(rest, pack.unitsPerPack);
+    if (count === 0) continue;
+    parts.push(`${formatMoney(count)} × ${pack.label}`);
+    rest -= count * pack.unitsPerPack;
+  }
+  if (rest > 0) parts.push(`${formatMoney(rest)} ${unit}`);
+  return parts.join(" + ") || `0 × ${sorted[0].label}`;
 }
 
 // What gets snapshotted onto order_items.productName.

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { formatMoney } from "@/lib/money";
-import { packsFrom, stockLevel, type ProductLine, type Size } from "@/lib/catalog";
+import { stockAsPacks, stockLevel, type ProductLine, type Size } from "@/lib/catalog";
 import { fill } from "@/lib/text";
 import type { Dictionary } from "@/lib/i18n";
 import { BoxIcon, ChevronIcon, SearchIcon, TagIcon, TrashIcon } from "@/components/icons";
@@ -268,7 +268,6 @@ function Tile({
   const free = size.stock - unitsInCart;
   const level = stockLevel(size.stock, line.lowStockAt);
   const soldOut = !size.packs.some((pack) => pack.unitsPerPack <= free);
-  const onlyPack = size.packs.length === 1 ? size.packs[0] : null;
 
   function stockText() {
     const stock = formatMoney(free);
@@ -276,14 +275,7 @@ function Tile({
     if (level === "out") return dict.sell.outOfStock;
     if (soldOut && unitsInCart > 0) return dict.sell.allInCart;
     if (soldOut) return fill(dict.sell.notEnoughForPack, { stock, unit });
-    if (onlyPack && onlyPack.unitsPerPack > 1) {
-      return fill(dict.sell.packsLeft, {
-        packs: packsFrom(free, onlyPack.unitsPerPack),
-        stock,
-        unit,
-      });
-    }
-    return fill(dict.sell.unitsLeft, { stock, unit });
+    return fill(dict.sell.stockLeft, { stock: stockAsPacks(free, size.packs, unit) });
   }
 
   return (

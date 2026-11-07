@@ -6,9 +6,9 @@ import { stockAdjustments } from "@/lib/db/schema";
 import { getProductLines } from "@/lib/db/queries";
 import { formatMoney } from "@/lib/money";
 import { formatDateTime } from "@/lib/time";
-import { packsFrom, stockLevel } from "@/lib/catalog";
+import { packsFrom, stockAsPacks, stockLevel } from "@/lib/catalog";
 import { fill } from "@/lib/text";
-import { getDictionary, type Dictionary } from "@/lib/i18n";
+import { getDictionary } from "@/lib/i18n";
 import { Badge } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -58,6 +58,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         <ul className="divide-y divide-border">
           {line.sizes.map((size) => {
             const level = stockLevel(size.stock, line.lowStockAt);
+            const stockText = stockAsPacks(size.stock, size.packs, line.stockUnit);
             return (
               <li
                 key={size.id}
@@ -69,16 +70,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   <div>
                     <p className="font-display font-semibold tracking-tight">{size.name}</p>
                     {size.note && <p className="text-xs text-muted">{size.note}</p>}
-                    {size.supplierPackSize && (
-                      <p className="money text-xs text-muted">
-                        {supplierPacksText(size.stock, size.supplierPackSize, line.stockUnit, dict)}
-                      </p>
-                    )}
                   </div>
                   <StockBadge
                     className="sm:hidden"
                     level={level}
-                    label={`${formatMoney(size.stock)} ${line.stockUnit}`}
+                    label={stockText}
                   />
                 </div>
                 <div className="space-y-0.5">
@@ -108,7 +104,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                   ))}
                 </div>
                 <div className="hidden w-28 text-right sm:block">
-                  <StockBadge level={level} label={`${formatMoney(size.stock)} ${line.stockUnit}`} />
+                  <StockBadge level={level} label={stockText} />
                 </div>
               </li>
             );
@@ -144,15 +140,6 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       )}
     </Page>
   );
-}
-
-// "92 packs + 10 pcs": the stock as it sits on the shelf, with one pack opened.
-function supplierPacksText(stock: number, packSize: number, unit: string, dict: Dictionary) {
-  const packs = formatMoney(packsFrom(stock, packSize));
-  const rest = stock > 0 ? stock % packSize : 0;
-  return rest > 0
-    ? fill(dict.stock.inPacksLoose, { packs, rest: formatMoney(rest), unit })
-    : fill(dict.stock.inPacks, { packs });
 }
 
 function StockBadge({

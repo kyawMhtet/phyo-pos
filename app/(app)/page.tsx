@@ -5,7 +5,7 @@ import { expenses, orderItems, orders } from "@/lib/db/schema";
 import { getProductLines } from "@/lib/db/queries";
 import { formatMoney } from "@/lib/money";
 import { addDays, formatDate, formatDateTime, formatShortDate, startOfDay } from "@/lib/time";
-import { stockLevel } from "@/lib/catalog";
+import { stockAsPacks, stockLevel } from "@/lib/catalog";
 import { paymentState, paymentStateLabels, statusLabels } from "@/lib/orders";
 import { getDictionary } from "@/lib/i18n";
 import { BagIcon, CheckIcon, CoinIcon, TagIcon, TruckIcon, WarningIcon } from "@/components/icons";
@@ -203,7 +203,7 @@ export default async function DashboardPage() {
                         <p className="truncate text-xs text-muted">{line.name}</p>
                       </div>
                       <Badge tone={level === "out" ? "bad" : "warn"} className="money">
-                        {formatMoney(size.stock)} {line.stockUnit}
+                        {stockAsPacks(size.stock, size.packs, line.stockUnit)}
                       </Badge>
                     </Link>
                   </li>
