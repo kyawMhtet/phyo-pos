@@ -57,7 +57,7 @@ export function Sheet({
               <CloseIcon className="h-5 w-5" />
             </button>
           </div>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5">{children}</div>
+          <div className="min-h-0 flex-auto overflow-y-auto overscroll-contain p-5">{children}</div>
           {footer && (
             <div className="border-t border-border p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
               {footer}
