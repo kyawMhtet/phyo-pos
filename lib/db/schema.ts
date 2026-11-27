@@ -48,6 +48,8 @@ export const productPacks = sqliteTable("product_packs", {
   unitsPerPack: integer("units_per_pack").notNull().default(1),
   price: integer("price").notNull(),
   costPrice: integer("cost_price").notNull().default(0),
+  // Price for wholesale buyers (လက်ကားစျေး). Null means not set. Not used by Sell yet.
+  wholesalePrice: integer("wholesale_price"),
   sortOrder: integer("sort_order").notNull().default(0),
 });
 

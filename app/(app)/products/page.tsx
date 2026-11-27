@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { formatMoney } from "@/lib/money";
 import { getProductLines } from "@/lib/db/queries";
-import { stockLevel, type ProductLine } from "@/lib/catalog";
+import { stockLevel, stockValueOf, type ProductLine } from "@/lib/catalog";
+import { fill } from "@/lib/text";
 import { getDictionary, type Dictionary } from "@/lib/i18n";
 import { BoxIcon, ChevronIcon, PlusIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,8 @@ export default async function ProductsPage() {
   const isListed = (line: ProductLine) => line.sizes.some((size) => size.isActive);
   const listed = lines.filter(isListed);
   const hidden = lines.filter((line) => !isListed(line));
+  // Every size counts, hidden ones too: their stock is still money on the shelf.
+  const stock = stockValueOf(lines.flatMap((line) => line.sizes));
 
   return (
     <Page wide>
@@ -29,6 +32,21 @@ export default async function ProductsPage() {
           </Link>
         }
       />
+
+      {lines.length > 0 && (
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          <p className="text-sm text-muted">{dict.products.stockValue}</p>
+          <p className="money mt-1 font-display text-2xl font-semibold tracking-tight">
+            {formatMoney(stock.value)}
+            <span className="ml-1 text-sm font-medium text-muted">{dict.common.currency}</span>
+          </p>
+          {stock.missingCost > 0 && (
+            <p className="money mt-1 text-sm text-warn">
+              {fill(dict.products.stockValueMissing, { n: stock.missingCost })}
+            </p>
+          )}
+        </div>
+      )}
 
       {listed.length === 0 && (
         <Empty
@@ -73,6 +91,8 @@ function LineCard({ line, dict }: { line: ProductLine; dict: Dictionary }) {
   const out = levels.filter((level) => level === "out").length;
   const low = levels.filter((level) => level === "low").length;
 
+  const stock = stockValueOf(line.sizes);
+
   const min = Math.min(...prices);
   const maxPrice = Math.max(...prices);
 
@@ -88,6 +108,11 @@ function LineCard({ line, dict }: { line: ProductLine; dict: Dictionary }) {
           {prices.length > 0 &&
             ` · ${formatMoney(min)}${maxPrice > min ? ` – ${formatMoney(maxPrice)}` : ""} ${dict.common.currency}`}
         </p>
+        {stock.value > 0 && (
+          <p className="money text-sm text-muted">
+            {dict.products.stockValueShort} {formatMoney(stock.value)} {dict.common.currency}
+          </p>
+        )}
         {(out > 0 || low > 0) && (
           <p className="flex gap-1.5 pt-0.5">
             {out > 0 && (

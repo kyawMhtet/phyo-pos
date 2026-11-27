@@ -94,6 +94,11 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
                       </span>
                       <span className="money">
                         <span className="font-semibold">{formatMoney(pack.price)}</span>
+                        {pack.wholesalePrice !== null && (
+                          <span className="ml-2 text-xs text-muted">
+                            {dict.products.wholesalePrice} {formatMoney(pack.wholesalePrice)}
+                          </span>
+                        )}
                         {pack.costPrice > 0 && (
                           <span className="ml-2 text-xs text-good">
                             +{formatMoney(pack.price - pack.costPrice)}

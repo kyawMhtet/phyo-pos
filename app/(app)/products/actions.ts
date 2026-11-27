@@ -31,6 +31,7 @@ const lineSchema = z.object({
             unitsPerPack: z.number().int().positive(),
             price: z.number().int().min(0),
             costPrice: z.number().int().min(0),
+            wholesalePrice: z.number().int().min(0).nullable(),
           })
         ),
       })
@@ -127,6 +128,7 @@ export async function saveProductLine(
           unitsPerPack: pack.unitsPerPack,
           price: pack.price,
           costPrice: pack.costPrice,
+          wholesalePrice: pack.wholesalePrice,
           sortOrder: packIndex,
         };
         if (pack.id) {

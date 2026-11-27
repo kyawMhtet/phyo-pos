@@ -23,7 +23,7 @@ import { useSubmit } from "@/components/ui/use-submit";
 import { saveProductLine } from "./actions";
 
 type PackColumn = { key: string; label: string; units: number | null };
-type Cell = { id?: number; price: number | null; cost: number | null };
+type Cell = { id?: number; price: number | null; wholesale: number | null; cost: number | null };
 type SizeRow = {
   key: string;
   id?: number;
@@ -75,7 +75,12 @@ function initialState(line?: ProductLine) {
     cells: Object.fromEntries(
       size.packs.map((pack) => [
         columnKey(pack.label, pack.unitsPerPack),
-        { id: pack.id, price: pack.price, cost: pack.costPrice || null },
+        {
+          id: pack.id,
+          price: pack.price,
+          wholesale: pack.wholesalePrice,
+          cost: pack.costPrice || null,
+        },
       ])
     ),
   }));
@@ -127,7 +132,7 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
     setRows((prev) =>
       prev.map((row) => {
         if (row.key !== rowKey) return row;
-        const cell = row.cells[columnKey] ?? { price: null, cost: null };
+        const cell = row.cells[columnKey] ?? { price: null, wholesale: null, cost: null };
         return { ...row, cells: { ...row.cells, [columnKey]: { ...cell, ...patch } } };
       })
     );
@@ -223,6 +228,7 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
                   unitsPerPack: column.units ?? 1,
                   price: cell.price,
                   costPrice: cell.cost ?? 0,
+                  wholesalePrice: cell.wholesale,
                 },
               ];
             }),
@@ -446,35 +452,44 @@ export function ProductEditor({ line, dict }: { line?: ProductLine; dict: Dictio
 
               <FieldError message={fieldErrors[`size-${row.key}`]} />
 
-              <div className="mt-2 grid grid-cols-2 items-end gap-2 sm:grid-cols-[repeat(auto-fill,minmax(9rem,1fr))]">
+              <div className="mt-3 space-y-3">
                 {columns.map((column) => {
                   const cell = row.cells[column.key];
-                  const label = column.label || t.packLabel;
+                  const fields = [
+                    { key: "price", label: t.sellPrice, value: cell?.price ?? null },
+                    { key: "wholesale", label: t.wholesalePrice, value: cell?.wholesale ?? null },
+                    { key: "cost", label: t.costPrice, value: cell?.cost ?? null },
+                  ] as const;
                   return (
-                    <div key={column.key} className="contents">
-                      <div>
-                        <Label htmlFor={`price-${row.key}-${column.key}`} className="truncate">
-                          {t.sellPrice} · {label}
-                        </Label>
-                        <NumberInput
-                          id={`price-${row.key}-${column.key}`}
-                          value={cell?.price ?? null}
-                          onValueChange={(price) => updateCell(row.key, column.key, { price })}
-                        />
+                    <fieldset key={column.key}>
+                      <legend className="mb-1 truncate text-xs font-semibold text-muted">
+                        {column.label || t.packLabel}
+                      </legend>
+                      <div className="grid grid-cols-3 gap-2">
+                        {fields.map((field) => (
+                          <div key={field.key}>
+                            <Label
+                              htmlFor={`${field.key}-${row.key}-${column.key}`}
+                              className="truncate"
+                            >
+                              {field.label}
+                            </Label>
+                            <NumberInput
+                              id={`${field.key}-${row.key}-${column.key}`}
+                              value={field.value}
+                              onValueChange={(value) =>
+                                updateCell(row.key, column.key, { [field.key]: value })
+                              }
+                            />
+                          </div>
+                        ))}
                       </div>
-                      <div>
-                        <Label htmlFor={`cost-${row.key}-${column.key}`} className="truncate">
-                          {t.costPrice} · {label}
-                        </Label>
-                        <NumberInput
-                          id={`cost-${row.key}-${column.key}`}
-                          value={cell?.cost ?? null}
-                          onValueChange={(cost) => updateCell(row.key, column.key, { cost })}
-                        />
-                      </div>
-                    </div>
+                    </fieldset>
                   );
                 })}
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 items-end gap-2 sm:grid-cols-[repeat(auto-fill,minmax(9rem,1fr))]">
                 <div className="col-span-2">
                   <Label htmlFor={`supplier-${row.key}`}>
                     {fill(t.supplierPack, { unit: stockUnit })} ({dict.common.optional})

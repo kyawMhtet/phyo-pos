@@ -1,0 +1,1 @@
+ALTER TABLE `product_packs` ADD `wholesale_price` integer;

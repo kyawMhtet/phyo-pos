@@ -21,6 +21,7 @@ export async function getProductLines(): Promise<ProductLine[]> {
       unitsPerPack: pack.unitsPerPack,
       price: pack.price,
       costPrice: pack.costPrice,
+      wholesalePrice: pack.wholesalePrice,
     });
     packsBySize.set(pack.productId, list);
   }

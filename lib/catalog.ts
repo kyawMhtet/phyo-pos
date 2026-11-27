@@ -6,6 +6,7 @@ export type Pack = {
   unitsPerPack: number;
   price: number;
   costPrice: number;
+  wholesalePrice: number | null;
 };
 
 type PackSize = Pick<Pack, "label" | "unitsPerPack">;
@@ -82,6 +83,28 @@ export function stockAsPacks(units: number, packs: PackSize[], unit: string): st
   }
   if (rest > 0) parts.push(`${formatMoney(rest)} ${unit}`);
   return parts.join(" + ") || `0 × ${sorted[0].label}`;
+}
+
+// What a size's stock cost to buy: stock × cost of one unit, taken from the biggest
+// pack with a cost (closest to the supplier price). Null when stock has no cost to use.
+export function stockCostValue(size: { stock: number; packs: Pack[] }): number | null {
+  if (size.stock <= 0) return 0;
+  const costed = size.packs.filter((pack) => pack.costPrice > 0);
+  if (costed.length === 0) return null;
+  const pack = costed.reduce((a, b) => (b.unitsPerPack > a.unitsPerPack ? b : a));
+  return Math.round((size.stock * pack.costPrice) / pack.unitsPerPack);
+}
+
+// Stock value of a set of sizes, plus how many in-stock sizes had no cost to count.
+export function stockValueOf(sizes: { stock: number; packs: Pack[] }[]) {
+  let value = 0;
+  let missingCost = 0;
+  for (const size of sizes) {
+    const sizeValue = stockCostValue(size);
+    if (sizeValue === null) missingCost += 1;
+    else value += sizeValue;
+  }
+  return { value, missingCost };
 }
 
 // What gets snapshotted onto order_items.productName.

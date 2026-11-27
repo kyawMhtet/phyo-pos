@@ -2,6 +2,7 @@ import { and, eq, gte, ne, sql } from "drizzle-orm";
 import { getDb } from "@/lib/db/client";
 import { expenses, orderItems, orders } from "@/lib/db/schema";
 import { formatMoney } from "@/lib/money";
+import { paymentMethodLabels, type PaymentMethod } from "@/lib/orders";
 import { addDays, formatShortDate, startOfDay } from "@/lib/time";
 import { getDictionary } from "@/lib/i18n";
 import { ChartIcon } from "@/components/icons";
@@ -49,7 +50,12 @@ export default async function ReportsPage({
       .innerJoin(orders, eq(orderItems.orderId, orders.id))
       .where(orderWhere),
     db
-      .select({ total: orders.total, createdAt: orders.createdAt })
+      .select({
+        total: orders.total,
+        paidAmount: orders.paidAmount,
+        paymentMethod: orders.paymentMethod,
+        createdAt: orders.createdAt,
+      })
       .from(orders)
       .where(orderWhere),
     db
@@ -87,6 +93,23 @@ export default async function ReportsPage({
     breakdown.set(key, entry);
   }
   const breakdownRows = Array.from(breakdown.values()).sort((a, b) => b.revenue - a.revenue);
+
+  // Money received per method, plus what's still owed, so the rows add up to revenue.
+  // Unpaid orders still carry the default "cash" method, so only paidAmount counts.
+  const byMethod = new Map<PaymentMethod, { amount: number; count: number }>();
+  let notPaidYet = 0;
+  for (const order of rangeOrders) {
+    notPaidYet += order.total - order.paidAmount;
+    if (order.paidAmount <= 0) continue;
+    const entry = byMethod.get(order.paymentMethod) ?? { amount: 0, count: 0 };
+    entry.amount += order.paidAmount;
+    entry.count += 1;
+    byMethod.set(order.paymentMethod, entry);
+  }
+  const methodRows = Array.from(byMethod, ([method, entry]) => ({ method, ...entry })).sort(
+    (a, b) => b.amount - a.amount,
+  );
+  const methodLabels = paymentMethodLabels(dict);
 
   const chartDays = range === "7d" ? 7 : range === "30d" ? 30 : 0;
   const daily = Array.from({ length: chartDays }, (_, index) => {
@@ -134,6 +157,37 @@ export default async function ReportsPage({
         <Stat label={dict.reports.expenses} value={formatMoney(expensesTotal)} />
         <Stat label={dict.reports.outstanding} value={formatMoney(outstanding.amount)} />
       </div>
+
+      {rangeOrders.length > 0 && (
+        <section className="space-y-3">
+          <SectionTitle>{dict.reports.byPayment}</SectionTitle>
+          <ul className="divide-y divide-border overflow-hidden rounded-2xl border border-border bg-surface">
+            {methodRows.map((row) => (
+              <li key={row.method} className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="font-medium">{methodLabels[row.method]}</p>
+                  <p className="money text-sm text-muted">
+                    {row.count} {dict.customers.ordersCount}
+                  </p>
+                </div>
+                <p className="money shrink-0 font-semibold">
+                  {formatMoney(row.amount)}
+                  <span className="ml-1 text-sm font-medium text-muted">{currency}</span>
+                </p>
+              </li>
+            ))}
+            {notPaidYet > 0 && (
+              <li className="flex items-center justify-between gap-3 px-4 py-3 text-muted">
+                <p className="font-medium">{dict.reports.notPaidYet}</p>
+                <p className="money shrink-0 font-semibold">
+                  {formatMoney(notPaidYet)}
+                  <span className="ml-1 text-sm font-medium">{currency}</span>
+                </p>
+              </li>
+            )}
+          </ul>
+        </section>
+      )}
 
       {chartDays > 0 && (
         <Card className="space-y-3">
